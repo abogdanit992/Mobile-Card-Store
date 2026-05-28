@@ -1,5 +1,8 @@
-import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { formatPrice } from "@/lib/format";
+import { MobileShell } from "@/components/mobile-shell";
+import { PrimaryButton } from "@/components/primary-button";
+import { StoreHeader } from "@/components/store-header";
 
 type CardsPageProps = {
   searchParams: Promise<{
@@ -12,18 +15,14 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
 
   if (!orderId) {
     return (
-      <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-neutral-50 px-4 py-6">
-        <h1 className="text-2xl font-semibold text-neutral-900">Card Delivery</h1>
-        <section className="mt-4 rounded-2xl border border-neutral-200 bg-white p-4 text-sm text-neutral-600">
-          Missing orderId. Please complete checkout first.
-        </section>
-        <Link
-          href="/"
-          className="mt-5 flex h-12 items-center justify-center rounded-xl border border-neutral-300 bg-white text-sm font-medium text-neutral-900"
-        >
-          Back to Products
-        </Link>
-      </main>
+      <MobileShell>
+        <StoreHeader title="我的卡密" backHref="/" />
+        <div className="p-4">
+          <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 text-sm text-[var(--muted)]">
+            请先完成支付流程
+          </section>
+        </div>
+      </MobileShell>
     );
   }
 
@@ -43,36 +42,41 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
   const errorMessage = orderError?.message || cardError?.message;
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-neutral-50 px-4 py-6">
-      <h1 className="text-2xl font-semibold text-neutral-900">Card Delivery</h1>
-      {errorMessage ? (
-        <section className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          Failed to load card delivery: {errorMessage}
-        </section>
-      ) : card ? (
-        <section className="mt-4 rounded-2xl border border-emerald-200 bg-white p-4">
-          <p className="text-xs uppercase tracking-wide text-emerald-700">
-            Delivered card code
-          </p>
-          <p className="mt-2 break-all rounded-lg bg-neutral-100 p-3 font-mono text-sm text-neutral-900">
-            {card.code}
-          </p>
-          <p className="mt-2 text-xs text-neutral-500">
-            Order: {order?.id} | Status: {order?.status}
-          </p>
-        </section>
-      ) : (
-        <section className="mt-4 rounded-2xl border border-neutral-200 bg-white p-4 text-sm text-neutral-600">
-          No card allocated yet for this order.
-        </section>
-      )}
+    <MobileShell>
+      <StoreHeader title="卡密交付" subtitle="请妥善保存" backHref="/" />
 
-      <Link
-        href="/"
-        className="mt-5 flex h-12 items-center justify-center rounded-xl border border-neutral-300 bg-white text-sm font-medium text-neutral-900"
-      >
-        Back to Products
-      </Link>
-    </main>
+      <div className="px-3 pt-3">
+        {errorMessage ? (
+          <section className="rounded-xl border border-red-900/50 bg-red-950/40 p-4 text-sm text-red-300">
+            {errorMessage}
+          </section>
+        ) : card ? (
+          <section className="rounded-xl border border-[var(--accent)]/50 bg-[var(--card)] p-5 glow-pink">
+            <p className="text-center text-[10px] font-black uppercase tracking-[0.2em] text-[var(--accent-soft)]">
+              Your VIP Code
+            </p>
+            <p className="mt-4 break-all rounded-lg border border-[var(--border)] bg-black/60 p-4 text-center font-mono text-lg font-bold tracking-widest text-[var(--gold)]">
+              {card.code}
+            </p>
+            {order ? (
+              <p className="mt-3 text-center text-xs text-[var(--muted)]">
+                订单 {order.id.slice(0, 8)}… · {formatPrice(order.amount)} · {order.status}
+              </p>
+            ) : null}
+            <p className="mt-4 text-center text-[10px] text-[var(--muted)]">
+              截图保存 · 勿泄露 · 复制后到 App 内激活
+            </p>
+          </section>
+        ) : (
+          <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 text-sm text-[var(--muted)]">
+            该订单尚未分配卡密
+          </section>
+        )}
+
+        <div className="mt-5">
+          <PrimaryButton href="/">继续逛逛</PrimaryButton>
+        </div>
+      </div>
+    </MobileShell>
   );
 }

@@ -1,22 +1,14 @@
-import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { Database } from "@/types/database";
-
-type Product = Database["public"]["Tables"]["products"]["Row"];
+import { MobileShell } from "@/components/mobile-shell";
+import { ProductCard } from "@/components/product-card";
+import { SortPills } from "@/components/sort-pills";
+import { StoreHeader } from "@/components/store-header";
 
 type HomePageProps = {
   searchParams: Promise<{
     sort?: string;
   }>;
 };
-
-function formatPrice(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
 
 export default async function Home({ searchParams }: HomePageProps) {
   const params = await searchParams;
@@ -39,79 +31,49 @@ export default async function Home({ searchParams }: HomePageProps) {
   const { data: products, error } = await query;
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-neutral-50 px-4 py-6">
-      <header className="mb-6">
-        <p className="text-xs uppercase tracking-wide text-neutral-500">
-          Mobile Card Store
-        </p>
-        <h1 className="mt-1 text-2xl font-semibold text-neutral-900">
-          Products
-        </h1>
-      </header>
+    <MobileShell>
+      <StoreHeader title="精选会员" subtitle="私密开通 · 即时到账" />
 
-      <section className="mb-4 flex items-center gap-2 text-xs">
-        <Link
-          href="/?sort=1"
-          className={`rounded-full border px-3 py-1.5 ${
-            sort === "1"
-              ? "border-neutral-900 bg-neutral-900 text-white"
-              : "border-neutral-300 bg-white text-neutral-700"
-          }`}
-        >
-          Newest
-        </Link>
-        <Link
-          href="/?sort=2"
-          className={`rounded-full border px-3 py-1.5 ${
-            sort === "2"
-              ? "border-neutral-900 bg-neutral-900 text-white"
-              : "border-neutral-300 bg-white text-neutral-700"
-          }`}
-        >
-          Price Low
-        </Link>
-        <Link
-          href="/?sort=3"
-          className={`rounded-full border px-3 py-1.5 ${
-            sort === "3"
-              ? "border-neutral-900 bg-neutral-900 text-white"
-              : "border-neutral-300 bg-white text-neutral-700"
-          }`}
-        >
-          Price High
-        </Link>
-      </section>
+      <div className="px-3 pt-3">
+        <section className="relative overflow-hidden rounded-xl border border-[var(--border)] bg-gradient-to-br from-[#2a0f24] via-[#1a0a18] to-black p-4">
+          <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-[var(--accent)]/20 blur-2xl" />
+          <p className="relative text-[10px] font-black uppercase tracking-[0.2em] text-[var(--accent-soft)]">
+            Members Only
+          </p>
+          <h2 className="relative mt-1 text-base font-black text-white">
+            限时 VIP 卡密专区
+          </h2>
+          <p className="relative mt-1 text-xs text-[var(--muted)]">
+            付款即发卡 · 独享通道 · 24h 自动交付
+          </p>
+        </section>
 
-      {error ? (
-        <section className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          Failed to load products: {error.message}
-        </section>
-      ) : products && products.length > 0 ? (
-        <section className="grid grid-cols-2 gap-3">
-          {products.map((product: Product) => (
-            <Link
-              key={product.id}
-              href={`/products/${product.id}`}
-              className="rounded-2xl border border-neutral-200 bg-white p-3 transition hover:border-neutral-300"
-            >
-              <div className="mb-2 flex aspect-square items-center justify-center rounded-xl bg-neutral-100 text-xs text-neutral-400">
-                {product.cover ? "Cover" : "No Image"}
-              </div>
-              <h2 className="line-clamp-2 text-sm font-medium text-neutral-900">
-                {product.title}
-              </h2>
-              <p className="mt-1 text-xs text-neutral-500">
-                {formatPrice(product.price)}
-              </p>
-            </Link>
-          ))}
-        </section>
-      ) : (
-        <section className="rounded-2xl border border-neutral-200 bg-white p-4 text-sm text-neutral-600">
-          No active products found. Add products in `/admin/products` or
-          Supabase table `products`.
-        </section>
-      )}
-    </main>
+        <div className="mt-3">
+          <SortPills active={sort} />
+        </div>
+
+        {error ? (
+          <section className="mt-3 rounded-xl border border-red-900/50 bg-red-950/40 p-4 text-sm text-red-300">
+            {error.message}
+          </section>
+        ) : products && products.length > 0 ? (
+          <section className="mt-3 grid grid-cols-2 gap-2.5">
+            {products.map((product) => (
+              <ProductCard
+                key={product.id}
+                id={product.id}
+                title={product.title}
+                price={product.price}
+                cover={product.cover}
+              />
+            ))}
+          </section>
+        ) : (
+          <section className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 text-center text-sm text-[var(--muted)]">
+            暂无商品，请先在后台上架
+          </section>
+        )}
+      </div>
+    </MobileShell>
   );
 }

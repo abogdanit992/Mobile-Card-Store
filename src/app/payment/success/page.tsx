@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { PayButton } from "./pay-button";
+import { MobileShell } from "@/components/mobile-shell";
+import { StoreHeader } from "@/components/store-header";
 
 type PaymentSuccessPageProps = {
   searchParams: Promise<{
@@ -15,11 +17,14 @@ export default async function PaymentSuccessPage({
 
   if (!productId) {
     return (
-      <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-neutral-50 px-4 py-6">
-        <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          Missing productId. Please restart checkout from product detail page.
-        </section>
-      </main>
+      <MobileShell showNav={false}>
+        <StoreHeader title="支付" backHref="/" />
+        <div className="p-4">
+          <section className="rounded-xl border border-amber-900/40 bg-amber-950/30 p-4 text-sm text-amber-200">
+            参数缺失，请重新下单
+          </section>
+        </div>
+      </MobileShell>
     );
   }
 
@@ -32,21 +37,34 @@ export default async function PaymentSuccessPage({
     .maybeSingle();
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-neutral-50 px-4 py-6">
-      <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-        <p className="text-sm font-medium text-emerald-700">Payment successful</p>
-        <h1 className="mt-1 text-xl font-semibold text-neutral-900">
-          {product ? product.title : "Order"}
-        </h1>
-        <p className="mt-2 text-sm text-neutral-600">
-          Confirm to create order and allocate one unused card code from
-          inventory.
-        </p>
-      </section>
-      <PayButton productId={productId} />
-      <Link href="/" className="mt-3 text-center text-sm text-neutral-500">
-        Cancel and return to products
-      </Link>
-    </main>
+    <MobileShell showNav={false}>
+      <StoreHeader title="支付成功" backHref="/" />
+
+      <div className="px-4 pt-4">
+        <section className="rounded-xl border border-emerald-900/40 bg-emerald-950/20 p-5 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent)] text-2xl text-white glow-pink">
+            ✓
+          </div>
+          <p className="mt-3 text-sm font-bold text-[var(--accent-soft)]">
+            支付已完成
+          </p>
+          <h1 className="mt-1 text-lg font-bold text-white">
+            {product ? product.title : "您的订单"}
+          </h1>
+          <p className="mt-2 text-sm text-[var(--muted)]">
+            点击下方按钮，系统将自动创建订单并发放卡密
+          </p>
+        </section>
+
+        <PayButton productId={productId} />
+
+        <Link
+          href="/"
+          className="mt-3 block text-center text-sm text-[var(--muted)] hover:text-[var(--accent-soft)]"
+        >
+          取消返回
+        </Link>
+      </div>
+    </MobileShell>
   );
 }

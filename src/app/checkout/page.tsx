@@ -1,5 +1,8 @@
-import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { formatPrice } from "@/lib/format";
+import { MobileShell } from "@/components/mobile-shell";
+import { PrimaryButton } from "@/components/primary-button";
+import { StoreHeader } from "@/components/store-header";
 
 type CheckoutPageProps = {
   searchParams: Promise<{
@@ -7,24 +10,19 @@ type CheckoutPageProps = {
   }>;
 };
 
-function formatPrice(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
 export default async function CheckoutPage({ searchParams }: CheckoutPageProps) {
   const { productId } = await searchParams;
 
   if (!productId) {
     return (
-      <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-neutral-50 px-4 py-6">
-        <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          Missing productId. Please choose a product first.
-        </section>
-      </main>
+      <MobileShell showNav={false}>
+        <StoreHeader title="结算" backHref="/" />
+        <div className="p-4">
+          <section className="rounded-xl border border-amber-900/40 bg-amber-950/30 p-4 text-sm text-amber-200">
+            请先选择商品
+          </section>
+        </div>
+      </MobileShell>
     );
   }
 
@@ -36,44 +34,47 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
     .eq("active", true)
     .maybeSingle();
 
-  if (error) {
+  if (error || !product) {
     return (
-      <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-neutral-50 px-4 py-6">
-        <section className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          Failed to load checkout: {error.message}
-        </section>
-      </main>
-    );
-  }
-
-  if (!product) {
-    return (
-      <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-neutral-50 px-4 py-6">
-        <section className="rounded-2xl border border-neutral-200 bg-white p-4 text-sm text-neutral-600">
-          Product not found or inactive.
-        </section>
-      </main>
+      <MobileShell showNav={false}>
+        <StoreHeader title="结算" backHref="/" />
+        <div className="p-4">
+          <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 text-sm text-[var(--muted)]">
+            {error?.message ?? "商品不存在或已下架"}
+          </section>
+        </div>
+      </MobileShell>
     );
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-neutral-50 px-4 py-6">
-      <h1 className="mb-4 text-2xl font-semibold text-neutral-900">Checkout</h1>
+    <MobileShell showNav={false}>
+      <StoreHeader title="确认订单" backHref={`/products/${product.id}`} backLabel="返回" />
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-4">
-        <p className="text-sm text-neutral-500">Selected product</p>
-        <h2 className="mt-1 text-lg font-medium text-neutral-900">{product.title}</h2>
-        <p className="mt-2 text-xl font-bold text-neutral-900">
-          {formatPrice(product.price)}
-        </p>
-      </section>
+      <div className="space-y-3 px-3 pt-3 pb-28">
+        <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent-soft)]">
+            订单信息
+          </p>
+          <h2 className="mt-2 text-lg font-bold text-white">{product.title}</h2>
+          <div className="mt-4 flex items-center justify-between border-t border-[var(--border)] pt-3">
+            <span className="text-sm text-[var(--muted)]">应付金额</span>
+            <span className="text-2xl font-black text-[var(--gold)]">
+              {formatPrice(product.price)}
+            </span>
+          </div>
+        </section>
 
-      <Link
-        href={`/payment/success?productId=${product.id}`}
-        className="mt-5 flex h-12 items-center justify-center rounded-xl bg-neutral-900 text-sm font-medium text-white"
-      >
-        Simulate Payment Success
-      </Link>
-    </main>
+        <section className="rounded-xl border border-dashed border-[var(--border)] bg-black/30 p-3 text-xs text-[var(--muted)]">
+          演示模式：点击支付后将模拟成功，并自动从库存分配卡密。
+        </section>
+      </div>
+
+      <div className="fixed bottom-0 left-1/2 z-40 w-full max-w-md -translate-x-1/2 border-t border-[var(--border)] bg-[#0c0612]/95 p-3 backdrop-blur-md">
+        <PrimaryButton href={`/payment/success?productId=${product.id}`}>
+          去支付 {formatPrice(product.price)}
+        </PrimaryButton>
+      </div>
+    </MobileShell>
   );
 }
