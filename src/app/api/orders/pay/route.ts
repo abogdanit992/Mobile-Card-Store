@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { Database } from "@/types/database";
 
 type PayOrderBody = {
   productId?: string;
@@ -39,13 +40,16 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data: order, error: orderError } = await supabase
-    .from("orders")
-    .insert({
+  const orderPayload = [
+    {
       product_id: product.id,
       amount: product.price,
       status: "paid",
-    })
+    } satisfies Database["public"]["Tables"]["orders"]["Insert"],
+  ];
+  const { data: order, error: orderError } = await supabase
+    .from("orders")
+    .insert(orderPayload)
     .select("id,product_id,status,amount")
     .single();
 

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { Database } from "@/types/database";
 
 export async function createProductAction(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
@@ -14,13 +15,16 @@ export async function createProductAction(formData: FormData) {
   }
 
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.from("products").insert({
-    title,
-    description: description || null,
-    cover: cover || null,
-    price: priceRaw,
-    active: true,
-  });
+  const payload = [
+    {
+      title,
+      description: description || null,
+      cover: cover || null,
+      price: priceRaw,
+      active: true,
+    } satisfies Database["public"]["Tables"]["products"]["Insert"],
+  ];
+  const { error } = await supabase.from("products").insert(payload);
 
   if (error) {
     throw new Error(`Failed to create product: ${error.message}`);

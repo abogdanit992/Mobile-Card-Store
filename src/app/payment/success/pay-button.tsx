@@ -29,8 +29,13 @@ export function PayButton({ productId }: PayButtonProps) {
         | { ok: true; orderId: string; productId: string }
         | { error: string };
 
-      if (!response.ok || !("ok" in result)) {
-        setError(result.error || "Payment confirmation failed.");
+      if (!response.ok) {
+        setError("error" in result ? result.error : "Payment confirmation failed.");
+        return;
+      }
+
+      if (!("ok" in result)) {
+        setError("Payment confirmation failed.");
         return;
       }
 

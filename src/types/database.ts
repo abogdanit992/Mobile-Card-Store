@@ -25,6 +25,7 @@ export type Database = {
           email?: string;
           created_at?: string;
         };
+        Relationships: [];
       };
       products: {
         Row: {
@@ -54,6 +55,7 @@ export type Database = {
           active?: boolean;
           created_at?: string;
         };
+        Relationships: [];
       };
       orders: {
         Row: {
@@ -80,6 +82,7 @@ export type Database = {
           status?: "pending" | "paid" | "cancelled";
           created_at?: string;
         };
+        Relationships: [];
       };
       cards: {
         Row: {
@@ -109,6 +112,7 @@ export type Database = {
           used_at?: string | null;
           created_at?: string;
         };
+        Relationships: [];
       };
     };
     Views: Record<string, never>;
