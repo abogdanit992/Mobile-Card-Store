@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { adminHref } from "@/lib/admin-url";
 import { createProductAction, toggleProductStatusAction } from "./actions";
 
 function formatPrice(value: number) {
@@ -11,6 +12,7 @@ function formatPrice(value: number) {
 }
 
 export default async function AdminProductsPage() {
+  const backHref = await adminHref("/admin");
   const supabase = await createSupabaseServerClient();
   const { data: products, error } = await supabase
     .from("products")
@@ -20,7 +22,7 @@ export default async function AdminProductsPage() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-neutral-50 px-4 py-6">
       <header className="mb-4">
-        <Link href="/admin" className="text-sm text-neutral-500">
+        <Link href={backHref} className="text-sm text-neutral-500">
           ← Back to admin
         </Link>
         <h1 className="mt-1 text-2xl font-semibold text-neutral-900">

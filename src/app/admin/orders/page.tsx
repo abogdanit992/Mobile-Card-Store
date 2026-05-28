@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { adminHref } from "@/lib/admin-url";
 
 type AdminOrdersPageProps = {
   searchParams: Promise<{
@@ -19,6 +20,8 @@ export default async function AdminOrdersPage({
   searchParams,
 }: AdminOrdersPageProps) {
   const { status } = await searchParams;
+  const backHref = await adminHref("/admin");
+  const ordersBase = await adminHref("/admin/orders");
   const supabase = await createSupabaseServerClient();
 
   let query = supabase
@@ -34,14 +37,14 @@ export default async function AdminOrdersPage({
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-neutral-50 px-4 py-6">
-      <Link href="/admin" className="text-sm text-neutral-500">
+      <Link href={backHref} className="text-sm text-neutral-500">
         ← Back to admin
       </Link>
       <h1 className="mt-1 text-2xl font-semibold text-neutral-900">Order Management</h1>
 
       <section className="mt-4 flex gap-2 text-xs">
         <Link
-          href="/admin/orders"
+          href={ordersBase}
           className={`rounded-full border px-3 py-1.5 ${
             !status
               ? "border-neutral-900 bg-neutral-900 text-white"
@@ -51,7 +54,7 @@ export default async function AdminOrdersPage({
           All
         </Link>
         <Link
-          href="/admin/orders?status=paid"
+          href={`${ordersBase}?status=paid`}
           className={`rounded-full border px-3 py-1.5 ${
             status === "paid"
               ? "border-neutral-900 bg-neutral-900 text-white"
@@ -61,7 +64,7 @@ export default async function AdminOrdersPage({
           Paid
         </Link>
         <Link
-          href="/admin/orders?status=pending"
+          href={`${ordersBase}?status=pending`}
           className={`rounded-full border px-3 py-1.5 ${
             status === "pending"
               ? "border-neutral-900 bg-neutral-900 text-white"
@@ -71,7 +74,7 @@ export default async function AdminOrdersPage({
           Pending
         </Link>
         <Link
-          href="/admin/orders?status=cancelled"
+          href={`${ordersBase}?status=cancelled`}
           className={`rounded-full border px-3 py-1.5 ${
             status === "cancelled"
               ? "border-neutral-900 bg-neutral-900 text-white"

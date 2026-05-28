@@ -4,20 +4,34 @@ import type { Database } from "@/types/database";
 
 type PayOrderBody = {
   productId?: string;
+  contactEmail?: string;
+  contactPhone?: string;
 };
+
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
 
 export async function POST(request: Request) {
   const body = (await request.json()) as PayOrderBody;
   const productId = body.productId;
+  const contactEmail = body.contactEmail?.trim().toLowerCase();
+  const contactPhone = body.contactPhone?.trim();
 
   if (!productId) {
-    return NextResponse.json(
-      { error: "Missing productId in request body." },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Missing productId." }, { status: 400 });
+  }
+  if (!contactEmail || !isValidEmail(contactEmail)) {
+    return NextResponse.json({ error: "Invalid contact email." }, { status: 400 });
+  }
+  if (!contactPhone || contactPhone.length < 6) {
+    return NextResponse.json({ error: "Invalid contact phone." }, { status: 400 });
   }
 
   const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { data: product, error: productError } = await supabase
     .from("products")
@@ -27,17 +41,10 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (productError) {
-    return NextResponse.json(
-      { error: `Failed to load product: ${productError.message}` },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: productError.message }, { status: 500 });
   }
-
   if (!product) {
-    return NextResponse.json(
-      { error: "Product not found or inactive." },
-      { status: 404 },
-    );
+    return NextResponse.json({ error: "Product not found." }, { status: 404 });
   }
 
   const orderPayload = [
@@ -45,8 +52,12 @@ export async function POST(request: Request) {
       product_id: product.id,
       amount: product.price,
       status: "paid",
+      user_id: user?.id ?? null,
+      contact_email: contactEmail,
+      contact_phone: contactPhone,
     } satisfies Database["public"]["Tables"]["orders"]["Insert"],
   ];
+
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .insert(orderPayload)
@@ -55,9 +66,16 @@ export async function POST(request: Request) {
 
   if (orderError || !order) {
     return NextResponse.json(
-      { error: `Failed to create order: ${orderError?.message ?? "Unknown"}` },
+      { error: orderError?.message ?? "Failed to create order." },
       { status: 500 },
     );
+  }
+
+  if (user?.id) {
+    await supabase
+      .from("users")
+      .update({ phone: contactPhone })
+      .eq("id", user.id);
   }
 
   const { data: card, error: cardError } = await supabase
@@ -70,18 +88,12 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (cardError) {
-    return NextResponse.json(
-      { error: `Failed to check card inventory: ${cardError.message}` },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: cardError.message }, { status: 500 });
   }
 
   if (!card) {
     await supabase.from("orders").update({ status: "cancelled" }).eq("id", order.id);
-    return NextResponse.json(
-      { error: "No available card inventory for this product." },
-      { status: 409 },
-    );
+    return NextResponse.json({ error: "No card inventory." }, { status: 409 });
   }
 
   const { error: claimError } = await supabase
@@ -96,10 +108,7 @@ export async function POST(request: Request) {
 
   if (claimError) {
     await supabase.from("orders").update({ status: "cancelled" }).eq("id", order.id);
-    return NextResponse.json(
-      { error: `Failed to allocate card: ${claimError.message}` },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: claimError.message }, { status: 500 });
   }
 
   return NextResponse.json({

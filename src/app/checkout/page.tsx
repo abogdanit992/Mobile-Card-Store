@@ -1,8 +1,9 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/user";
 import { formatPrice } from "@/lib/format";
 import { MobileShell } from "@/components/mobile-shell";
-import { PrimaryButton } from "@/components/primary-button";
 import { StoreHeader } from "@/components/store-header";
+import { CheckoutForm } from "./checkout-form";
 
 type CheckoutPageProps = {
   searchParams: Promise<{
@@ -27,12 +28,24 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
   }
 
   const supabase = await createSupabaseServerClient();
+  const user = await getCurrentUser();
+
   const { data: product, error } = await supabase
     .from("products")
     .select("id,title,price,active")
     .eq("id", productId)
     .eq("active", true)
     .maybeSingle();
+
+  let profilePhone: string | null = null;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("users")
+      .select("phone")
+      .eq("id", user.id)
+      .maybeSingle();
+    profilePhone = profile?.phone ?? null;
+  }
 
   if (error || !product) {
     return (
@@ -51,29 +64,23 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
     <MobileShell showNav={false}>
       <StoreHeader title="确认订单" backHref={`/products/${product.id}`} backLabel="返回" />
 
-      <div className="space-y-3 px-3 pt-3 pb-28">
+      <div className="space-y-3 px-3 pt-3 pb-8">
         <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
           <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent-soft)]">
             订单信息
           </p>
           <h2 className="mt-2 text-lg font-bold text-white">{product.title}</h2>
-          <div className="mt-4 flex items-center justify-between border-t border-[var(--border)] pt-3">
-            <span className="text-sm text-[var(--muted)]">应付金额</span>
-            <span className="text-2xl font-black text-[var(--gold)]">
-              {formatPrice(product.price)}
-            </span>
-          </div>
+          <p className="mt-2 text-2xl font-black text-[var(--gold)]">
+            {formatPrice(product.price)}
+          </p>
         </section>
 
-        <section className="rounded-xl border border-dashed border-[var(--border)] bg-black/30 p-3 text-xs text-[var(--muted)]">
-          演示模式：点击支付后将模拟成功，并自动从库存分配卡密。
-        </section>
-      </div>
-
-      <div className="fixed bottom-0 left-1/2 z-40 w-full max-w-md -translate-x-1/2 border-t border-[var(--border)] bg-[#0c0612]/95 p-3 backdrop-blur-md">
-        <PrimaryButton href={`/payment/success?productId=${product.id}`}>
-          去支付 {formatPrice(product.price)}
-        </PrimaryButton>
+        <CheckoutForm
+          productId={product.id}
+          defaultEmail={user?.email ?? ""}
+          defaultPhone={profilePhone ?? ""}
+          priceLabel={formatPrice(product.price)}
+        />
       </div>
     </MobileShell>
   );

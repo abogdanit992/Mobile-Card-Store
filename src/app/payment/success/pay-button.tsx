@@ -5,9 +5,15 @@ import { useRouter } from "next/navigation";
 
 type PayButtonProps = {
   productId: string;
+  contactEmail: string;
+  contactPhone: string;
 };
 
-export function PayButton({ productId }: PayButtonProps) {
+export function PayButton({
+  productId,
+  contactEmail,
+  contactPhone,
+}: PayButtonProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +26,7 @@ export function PayButton({ productId }: PayButtonProps) {
       const response = await fetch("/api/orders/pay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId }),
+        body: JSON.stringify({ productId, contactEmail, contactPhone }),
       });
 
       const result = (await response.json()) as

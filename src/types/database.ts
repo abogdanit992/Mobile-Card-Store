@@ -9,7 +9,7 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      users: {
+      admins: {
         Row: {
           id: string;
           email: string;
@@ -27,6 +27,27 @@ export type Database = {
         };
         Relationships: [];
       };
+      users: {
+        Row: {
+          id: string;
+          email: string;
+          phone: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          phone?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          phone?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       products: {
         Row: {
           id: string;
@@ -34,6 +55,7 @@ export type Database = {
           description: string | null;
           price: number;
           cover: string | null;
+          category_sort: string | null;
           active: boolean;
           created_at: string;
         };
@@ -43,6 +65,7 @@ export type Database = {
           description?: string | null;
           price: number;
           cover?: string | null;
+          category_sort?: string | null;
           active?: boolean;
           created_at?: string;
         };
@@ -52,6 +75,7 @@ export type Database = {
           description?: string | null;
           price?: number;
           cover?: string | null;
+          category_sort?: string | null;
           active?: boolean;
           created_at?: string;
         };
@@ -64,6 +88,8 @@ export type Database = {
           product_id: string;
           amount: number;
           status: "pending" | "paid" | "cancelled";
+          contact_email: string | null;
+          contact_phone: string | null;
           created_at: string;
         };
         Insert: {
@@ -72,6 +98,8 @@ export type Database = {
           product_id: string;
           amount: number;
           status?: "pending" | "paid" | "cancelled";
+          contact_email?: string | null;
+          contact_phone?: string | null;
           created_at?: string;
         };
         Update: {
@@ -80,6 +108,8 @@ export type Database = {
           product_id?: string;
           amount?: number;
           status?: "pending" | "paid" | "cancelled";
+          contact_email?: string | null;
+          contact_phone?: string | null;
           created_at?: string;
         };
         Relationships: [];

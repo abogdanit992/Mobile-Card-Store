@@ -1,8 +1,10 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { MobileShell } from "@/components/mobile-shell";
 import { ProductCard } from "@/components/product-card";
-import { SortPills } from "@/components/sort-pills";
+import { CategoryNav } from "@/components/category-nav";
 import { StoreHeader } from "@/components/store-header";
+import { StoreTopLinks } from "@/components/store-top-links";
+import { boxAppBySort } from "@/data/platforms";
 
 type HomePageProps = {
   searchParams: Promise<{
@@ -13,28 +15,27 @@ type HomePageProps = {
 export default async function Home({ searchParams }: HomePageProps) {
   const params = await searchParams;
   const sort = params.sort ?? "1";
+  const activeBrand = boxAppBySort(sort);
 
   const supabase = await createSupabaseServerClient();
   let query = supabase
     .from("products")
-    .select("id,title,description,price,cover,active,created_at")
-    .eq("active", true);
-
-  if (sort === "1") {
-    query = query.order("created_at", { ascending: false });
-  } else if (sort === "2") {
-    query = query.order("price", { ascending: true });
-  } else if (sort === "3") {
-    query = query.order("price", { ascending: false });
-  }
+    .select("id,title,description,price,cover,active,created_at,category_sort")
+    .eq("active", true)
+    .eq("category_sort", sort)
+    .order("created_at", { ascending: false });
 
   const { data: products, error } = await query;
 
   return (
     <MobileShell>
-      <StoreHeader title="精选会员" subtitle="私密开通 · 即时到账" />
+      <StoreHeader
+        title={activeBrand ? `${activeBrand.name}专区` : "精选会员"}
+        subtitle="私密开通 · 即时到账"
+      />
 
       <div className="px-3 pt-3">
+        <StoreTopLinks />
         <section className="relative overflow-hidden rounded-xl border border-[var(--border)] bg-gradient-to-br from-[#2a0f24] via-[#1a0a18] to-black p-4">
           <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-[var(--accent)]/20 blur-2xl" />
           <p className="relative text-[10px] font-black uppercase tracking-[0.2em] text-[var(--accent-soft)]">
@@ -49,7 +50,7 @@ export default async function Home({ searchParams }: HomePageProps) {
         </section>
 
         <div className="mt-3">
-          <SortPills active={sort} />
+          <CategoryNav activeSort={sort} />
         </div>
 
         {error ? (

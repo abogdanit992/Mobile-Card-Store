@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { adminHref } from "@/lib/admin-url";
 import { createCardAction } from "./actions";
 
 export default async function AdminCardsPage() {
+  const backHref = await adminHref("/admin");
   const supabase = await createSupabaseServerClient();
 
   const [{ data: products }, { data: cards, error }] = await Promise.all([
@@ -23,7 +25,7 @@ export default async function AdminCardsPage() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-neutral-50 px-4 py-6">
-      <Link href="/admin" className="text-sm text-neutral-500">
+      <Link href={backHref} className="text-sm text-neutral-500">
         ← Back to admin
       </Link>
       <h1 className="mt-1 text-2xl font-semibold text-neutral-900">Card Inventory</h1>

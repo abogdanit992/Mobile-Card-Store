@@ -7,21 +7,23 @@ import { StoreHeader } from "@/components/store-header";
 type PaymentSuccessPageProps = {
   searchParams: Promise<{
     productId?: string;
+    contactEmail?: string;
+    contactPhone?: string;
   }>;
 };
 
 export default async function PaymentSuccessPage({
   searchParams,
 }: PaymentSuccessPageProps) {
-  const { productId } = await searchParams;
+  const { productId, contactEmail, contactPhone } = await searchParams;
 
-  if (!productId) {
+  if (!productId || !contactEmail || !contactPhone) {
     return (
       <MobileShell showNav={false}>
         <StoreHeader title="支付" backHref="/" />
         <div className="p-4">
           <section className="rounded-xl border border-amber-900/40 bg-amber-950/30 p-4 text-sm text-amber-200">
-            参数缺失，请重新下单
+            缺少联系信息，请从结算页重新提交邮箱与手机号。
           </section>
         </div>
       </MobileShell>
@@ -51,12 +53,18 @@ export default async function PaymentSuccessPage({
           <h1 className="mt-1 text-lg font-bold text-white">
             {product ? product.title : "您的订单"}
           </h1>
-          <p className="mt-2 text-sm text-[var(--muted)]">
-            点击下方按钮，系统将自动创建订单并发放卡密
+          <p className="mt-2 text-xs text-[var(--muted)]">
+            邮箱：{contactEmail}
+            <br />
+            手机：{contactPhone}
           </p>
         </section>
 
-        <PayButton productId={productId} />
+        <PayButton
+          productId={productId}
+          contactEmail={contactEmail}
+          contactPhone={contactPhone}
+        />
 
         <Link
           href="/"
