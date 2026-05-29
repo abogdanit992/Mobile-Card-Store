@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { adminHref } from "@/lib/admin-url";
+import { SubmitButton } from "@/components/admin/submit-button";
 import {
   createPlatformAction,
   deletePlatformAction,
@@ -80,12 +81,12 @@ export default async function AdminPlatformsPage() {
           defaultValue={0}
           className={inputClass}
         />
-        <button
-          type="submit"
+        <SubmitButton
+          pendingText="Adding…"
           className="h-10 w-full rounded-lg bg-neutral-900 text-sm font-semibold text-white"
         >
           Add platform
-        </button>
+        </SubmitButton>
       </form>
 
       {error ? (
@@ -160,32 +161,32 @@ export default async function AdminPlatformsPage() {
                 defaultValue={p.sort_order}
                 className={inputClass}
               />
-              <button
-                type="submit"
+              <SubmitButton
+                pendingText="Saving…"
                 className="h-9 w-full rounded-lg bg-neutral-900 text-sm font-semibold text-white"
               >
                 Save
-              </button>
+              </SubmitButton>
             </form>
             <div className="mt-2 flex gap-2">
               <form action={togglePlatformAction} className="flex-1">
                 <input type="hidden" name="id" value={p.id} />
                 <input type="hidden" name="nextActive" value={String(!p.active)} />
-                <button
-                  type="submit"
+                <SubmitButton
+                  pendingText="…"
                   className="h-9 w-full rounded-lg border border-neutral-300 text-xs font-semibold text-neutral-700"
                 >
                   {p.active ? "Hide" : "Show"}
-                </button>
+                </SubmitButton>
               </form>
               <form action={deletePlatformAction} className="flex-1">
                 <input type="hidden" name="id" value={p.id} />
-                <button
-                  type="submit"
+                <SubmitButton
+                  pendingText="Deleting…"
                   className="h-9 w-full rounded-lg border border-red-300 text-xs font-semibold text-red-600"
                 >
                   Delete
-                </button>
+                </SubmitButton>
               </form>
             </div>
           </div>

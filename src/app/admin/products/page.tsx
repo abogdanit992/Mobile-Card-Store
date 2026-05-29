@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { adminHref } from "@/lib/admin-url";
+import { SubmitButton } from "@/components/admin/submit-button";
 import {
   createProductAction,
   deleteProductAction,
@@ -98,12 +99,12 @@ export default async function AdminProductsPage() {
             placeholder="描述 (中文)"
             className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
           />
-          <button
-            type="submit"
+          <SubmitButton
+            pendingText="Creating…"
             className="mt-1 h-10 rounded-lg bg-neutral-900 text-sm font-medium text-white"
           >
             Create Product
-          </button>
+          </SubmitButton>
         </form>
       </section>
 
@@ -175,12 +176,12 @@ export default async function AdminProductsPage() {
                   placeholder="描述 (中文)"
                   className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
                 />
-                <button
-                  type="submit"
+                <SubmitButton
+                  pendingText="Saving…"
                   className="h-9 rounded-lg bg-neutral-900 text-sm font-semibold text-white"
                 >
                   Save
-                </button>
+                </SubmitButton>
               </form>
 
               <div className="mt-2 flex gap-2">
@@ -191,21 +192,21 @@ export default async function AdminProductsPage() {
                     name="nextActive"
                     value={product.active ? "false" : "true"}
                   />
-                  <button
-                    type="submit"
+                  <SubmitButton
+                    pendingText="…"
                     className="h-9 w-full rounded-lg border border-neutral-300 text-xs font-semibold text-neutral-800"
                   >
                     {product.active ? "Set Inactive" : "Set Active"}
-                  </button>
+                  </SubmitButton>
                 </form>
                 <form action={deleteProductAction} className="flex-1">
                   <input type="hidden" name="id" value={product.id} />
-                  <button
-                    type="submit"
+                  <SubmitButton
+                    pendingText="Deleting…"
                     className="h-9 w-full rounded-lg border border-red-300 text-xs font-semibold text-red-600"
                   >
                     Delete
-                  </button>
+                  </SubmitButton>
                 </form>
               </div>
             </article>

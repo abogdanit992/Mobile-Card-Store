@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { adminHref } from "@/lib/admin-url";
 import { getSiteLanguageSettings } from "@/lib/i18n/server";
+import { SubmitButton } from "@/components/admin/submit-button";
 import { updateLanguageSettingsAction } from "./actions";
 
 export default async function AdminSettingsPage() {
@@ -49,12 +50,12 @@ export default async function AdminSettingsPage() {
           <option value="zh">中文</option>
         </select>
 
-        <button
-          type="submit"
+        <SubmitButton
+          pendingText="Saving…"
           className="h-10 w-full rounded-lg bg-neutral-900 text-sm font-semibold text-white"
         >
           Save settings
-        </button>
+        </SubmitButton>
       </form>
     </main>
   );

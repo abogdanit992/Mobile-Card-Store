@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { updateSession } from "@/lib/supabase/middleware";
 import { getSupabaseConfig } from "@/lib/supabase/config";
 import type { Database } from "@/types/database";
 import {
@@ -20,17 +19,37 @@ function copyCookies(from: NextResponse, to: NextResponse) {
   });
 }
 
-async function resolveAdminRootInternal(
-  request: NextRequest,
-): Promise<"/admin" | "/admin/login"> {
+export async function middleware(request: NextRequest) {
+  const hostname = normalizeHostname(
+    request.headers.get("x-forwarded-host") ?? request.headers.get("host"),
+  );
+  const { pathname, search } = request.nextUrl;
+  const onAdminHost = isAdminHost(hostname);
+
+  // Main domain /admin/* -> bounce to the admin subdomain.
+  if (!onAdminHost && pathname.startsWith("/admin")) {
+    const dest = redirectMainAdminToSubdomain(pathname, search);
+    return NextResponse.redirect(dest, 307);
+  }
+
+  // Build a single Supabase client and refresh the session exactly once.
+  let response = NextResponse.next({ request });
   const { supabaseUrl, supabaseAnonKey } = getSupabaseConfig();
   const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
       get(name: string) {
         return request.cookies.get(name)?.value;
       },
-      set() {},
-      remove() {},
+      set(name: string, value: string, options) {
+        request.cookies.set(name, value);
+        response = NextResponse.next({ request });
+        response.cookies.set({ name, value, ...options });
+      },
+      remove(name: string, options) {
+        request.cookies.set(name, "");
+        response = NextResponse.next({ request });
+        response.cookies.set({ name, value: "", ...options, maxAge: 0 });
+      },
     },
   });
 
@@ -38,46 +57,59 @@ async function resolveAdminRootInternal(
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user?.email) {
-    return "/admin/login";
+  // Storefront traffic only needs the refreshed session.
+  if (!onAdminHost) {
+    return response;
   }
 
-  const { data: adminRow } = await supabase
-    .from("admins")
-    .select("email")
-    .eq("email", user.email)
-    .maybeSingle();
+  // Admin subdomain: let API/auth/asset paths pass straight through.
+  if (isAdminPassthroughPath(pathname)) {
+    return response;
+  }
 
-  return adminRow ? "/admin" : "/admin/login";
-}
+  let internalPath = pathname.startsWith("/admin")
+    ? pathname
+    : toAdminInternalPath(pathname);
 
-async function guardAdminRoute(
-  request: NextRequest,
-  internalPath: string,
-  sessionResponse: NextResponse,
-  hostname: string,
-): Promise<NextResponse> {
+  if (pathname === "/") {
+    if (!user?.email) {
+      internalPath = "/admin/login";
+    } else {
+      const { data: adminRow } = await supabase
+        .from("admins")
+        .select("email")
+        .eq("email", user.email)
+        .maybeSingle();
+      internalPath = adminRow ? "/admin" : "/admin/login";
+    }
+  }
+
+  let out = response;
+  if (internalPath !== pathname) {
+    const rewriteUrl = request.nextUrl.clone();
+    rewriteUrl.pathname = internalPath;
+    out = NextResponse.rewrite(rewriteUrl);
+    copyCookies(response, out);
+  }
+
+  // The login page never needs the admin gate.
   if (
     !internalPath.startsWith("/admin") ||
     internalPath.startsWith("/admin/login")
   ) {
-    return sessionResponse;
+    return out;
   }
 
-  const { supabaseUrl, supabaseAnonKey } = getSupabaseConfig();
-  const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      get(name: string) {
-        return request.cookies.get(name)?.value;
-      },
-      set() {},
-      remove() {},
-    },
-  });
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Only enforce the admin redirect-gate on real page navigations.
+  // Server actions, RSC refreshes and prefetches are protected by database
+  // RLS; re-running the gate (and its extra round-trips) on those requests is
+  // what made the panel sluggish and caused saved/deleted changes to look like
+  // "nothing happened".
+  const isDocumentNav =
+    request.headers.get("sec-fetch-dest") === "document";
+  if (!isDocumentNav) {
+    return out;
+  }
 
   const loginPath = adminLoginPathForHost(hostname);
 
@@ -86,7 +118,7 @@ async function guardAdminRoute(
     loginUrl.pathname = loginPath;
     loginUrl.searchParams.set("next", internalPath);
     const redirect = NextResponse.redirect(loginUrl);
-    copyCookies(sessionResponse, redirect);
+    copyCookies(out, redirect);
     return redirect;
   }
 
@@ -101,53 +133,11 @@ async function guardAdminRoute(
     loginUrl.pathname = loginPath;
     loginUrl.searchParams.set("error", "not_admin");
     const redirect = NextResponse.redirect(loginUrl);
-    copyCookies(sessionResponse, redirect);
+    copyCookies(out, redirect);
     return redirect;
   }
 
-  return sessionResponse;
-}
-
-export async function middleware(request: NextRequest) {
-  const hostname = normalizeHostname(
-    request.headers.get("x-forwarded-host") ?? request.headers.get("host"),
-  );
-  const { pathname, search } = request.nextUrl;
-  const onAdminHost = isAdminHost(hostname);
-
-  if (!onAdminHost && pathname.startsWith("/admin")) {
-    const dest = redirectMainAdminToSubdomain(pathname, search);
-    return NextResponse.redirect(dest, 307);
-  }
-
-  const sessionResponse = await updateSession(request);
-
-  if (onAdminHost && !isAdminPassthroughPath(pathname)) {
-    let internalPath = pathname.startsWith("/admin")
-      ? pathname
-      : toAdminInternalPath(pathname);
-
-    if (pathname === "/") {
-      internalPath = await resolveAdminRootInternal(request);
-    }
-
-    let response: NextResponse = sessionResponse;
-
-    if (internalPath !== pathname) {
-      const rewriteUrl = request.nextUrl.clone();
-      rewriteUrl.pathname = internalPath;
-      response = NextResponse.rewrite(rewriteUrl);
-      copyCookies(sessionResponse, response);
-    }
-
-    return guardAdminRoute(request, internalPath, response, hostname);
-  }
-
-  if (pathname.startsWith("/admin")) {
-    return guardAdminRoute(request, pathname, sessionResponse, hostname);
-  }
-
-  return sessionResponse;
+  return out;
 }
 
 export const config = {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { adminHref } from "@/lib/admin-url";
+import { SubmitButton } from "@/components/admin/submit-button";
 import { updatePaymentChannelAction } from "./actions";
 
 const inputClass =
@@ -108,12 +109,12 @@ export default async function AdminPaymentsPage() {
                 defaultValue={ch.sort_order}
                 className={inputClass}
               />
-              <button
-                type="submit"
+              <SubmitButton
+                pendingText="Saving…"
                 className="h-10 w-full rounded-lg bg-neutral-900 text-sm font-semibold text-white"
               >
                 Save
-              </button>
+              </SubmitButton>
             </form>
           );
         })}
