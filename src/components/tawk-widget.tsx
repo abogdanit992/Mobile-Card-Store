@@ -3,7 +3,10 @@
 import Script from "next/script";
 
 /**
- * Loads the Tawk.to live-chat widget (floating bubble).
+ * Loads the Tawk.to live-chat widget but keeps its default floating launcher
+ * hidden, so it never overlaps the bottom navigation. The chat is opened
+ * programmatically from the "Support" entry (see SupportLauncher), and is
+ * hidden again whenever the visitor minimizes it.
  * `src` must be the embed URL from the Tawk dashboard:
  *   https://embed.tawk.to/<propertyId>/<widgetId>
  */
@@ -15,6 +18,8 @@ export function TawkWidget({ src }: { src: string }) {
       {`
         var Tawk_API = Tawk_API || {};
         var Tawk_LoadStart = new Date();
+        Tawk_API.onLoad = function () { try { Tawk_API.hideWidget(); } catch (e) {} };
+        Tawk_API.onChatMinimized = function () { try { Tawk_API.hideWidget(); } catch (e) {} };
         (function () {
           var s1 = document.createElement("script");
           var s0 = document.getElementsByTagName("script")[0];

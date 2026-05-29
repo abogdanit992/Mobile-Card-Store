@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "@/lib/i18n/server";
-import { getSupportSettings } from "@/lib/support";
-import { SupportTrigger } from "./support-trigger";
+import { getSupportSettings, isValidTawkSrc } from "@/lib/support";
+import { SupportLauncher } from "./support-launcher";
 
 const HOME_ICON =
   "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1";
@@ -27,7 +27,8 @@ function NavIcon({ d }: { d: string }) {
 
 export async function BottomNav() {
   const { t } = await getTranslations();
-  const { supportUrl } = await getSupportSettings();
+  const { tawkSrc, supportUrl, whatsappUrl } = await getSupportSettings();
+  const tawkAvailable = isValidTawkSrc(tawkSrc);
   const supportFallback = /^https?:\/\//i.test(supportUrl) ? supportUrl : "/support";
 
   const navItemClass =
@@ -46,10 +47,21 @@ export async function BottomNav() {
             {item.label}
           </Link>
         ))}
-        <SupportTrigger fallbackHref={supportFallback} className={navItemClass}>
+        <SupportLauncher
+          fallbackHref={supportFallback}
+          tawkAvailable={tawkAvailable}
+          whatsappUrl={whatsappUrl}
+          className={navItemClass}
+          labels={{
+            title: t.supportChooseTitle,
+            webChat: t.supportWebChat,
+            whatsapp: t.supportWhatsApp,
+            cancel: t.supportCancel,
+          }}
+        >
           <NavIcon d={SUPPORT_ICON} />
           {t.navService}
-        </SupportTrigger>
+        </SupportLauncher>
       </div>
     </nav>
   );

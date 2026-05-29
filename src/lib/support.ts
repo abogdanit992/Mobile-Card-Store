@@ -5,6 +5,8 @@ export type SupportSettings = {
   tawkSrc: string;
   /** Optional alternative chat link (Telegram / WhatsApp / QQ / …) */
   supportUrl: string;
+  /** Optional WhatsApp link (wa.me/…) shown as a floating button */
+  whatsappUrl: string;
 };
 
 function strValue(
@@ -26,13 +28,14 @@ export async function getSupportSettings(): Promise<SupportSettings> {
     const { data } = await supabase
       .from("site_settings")
       .select("key,value")
-      .in("key", ["tawk_src", "support_chat_url"]);
+      .in("key", ["tawk_src", "support_chat_url", "whatsapp_url"]);
 
     return {
       tawkSrc: strValue(data, "tawk_src"),
       supportUrl: strValue(data, "support_chat_url"),
+      whatsappUrl: strValue(data, "whatsapp_url"),
     };
   } catch {
-    return { tawkSrc: "", supportUrl: "" };
+    return { tawkSrc: "", supportUrl: "", whatsappUrl: "" };
   }
 }

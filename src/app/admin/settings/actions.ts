@@ -25,6 +25,7 @@ export async function updateLanguageSettingsAction(
 
   const supportChatUrl = String(formData.get("support_chat_url") ?? "").trim();
   const tawkSrc = String(formData.get("tawk_src") ?? "").trim();
+  const whatsappUrl = String(formData.get("whatsapp_url") ?? "").trim();
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.from("site_settings").upsert([
@@ -32,6 +33,7 @@ export async function updateLanguageSettingsAction(
     { key: "default_language", value: def as unknown as Json },
     { key: "support_chat_url", value: supportChatUrl as unknown as Json },
     { key: "tawk_src", value: tawkSrc as unknown as Json },
+    { key: "whatsapp_url", value: whatsappUrl as unknown as Json },
   ]);
 
   if (error) return { ok: false, message: `Failed to save: ${error.message}` };

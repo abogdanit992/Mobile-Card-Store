@@ -13,13 +13,14 @@ export default async function AdminSettingsPage() {
   const { data: rows } = await supabase
     .from("site_settings")
     .select("key,value")
-    .in("key", ["support_chat_url", "tawk_src"]);
+    .in("key", ["support_chat_url", "tawk_src", "whatsapp_url"]);
   const valueOf = (key: string) => {
     const v = rows?.find((r) => r.key === key)?.value;
     return typeof v === "string" ? v : "";
   };
   const supportChatUrl = valueOf("support_chat_url");
   const tawkSrc = valueOf("tawk_src");
+  const whatsappUrl = valueOf("whatsapp_url");
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-neutral-50 px-4 py-6">
@@ -93,6 +94,21 @@ export default async function AdminSettingsPage() {
         <p className="text-xs text-neutral-500">
           Used only when Tawk.to above is empty. Leave both blank to show a
           “coming soon” message.
+        </p>
+
+        <p className="mt-2 text-sm font-semibold text-neutral-900">
+          WhatsApp button (optional)
+        </p>
+        <input
+          name="whatsapp_url"
+          defaultValue={whatsappUrl}
+          placeholder="https://wa.me/447700900000?text=Hi"
+          className="h-10 w-full rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900"
+        />
+        <p className="text-xs text-neutral-500">
+          When set, a green WhatsApp button floats on the storefront (bottom-left,
+          next to the chat bubble). Format: https://wa.me/&lt;country code+number,
+          no “+” or spaces&gt;. This works alongside Tawk.to.
         </p>
       </ActionForm>
     </main>

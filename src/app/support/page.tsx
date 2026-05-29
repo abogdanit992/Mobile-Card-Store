@@ -1,18 +1,23 @@
 import { redirect } from "next/navigation";
 import { MobileShell } from "@/components/mobile-shell";
 import { StoreHeader } from "@/components/store-header";
-import { SupportTrigger } from "@/components/support-trigger";
+import { SupportLauncher } from "@/components/support-launcher";
 import { getSupportSettings, isValidTawkSrc } from "@/lib/support";
 import { getTranslations } from "@/lib/i18n/server";
 
 export default async function SupportPage() {
   const { t } = await getTranslations();
-  const { tawkSrc, supportUrl } = await getSupportSettings();
+  const { tawkSrc, supportUrl, whatsappUrl } = await getSupportSettings();
+  const tawkAvailable = isValidTawkSrc(tawkSrc);
+  const hasWhatsApp = /^https?:\/\//i.test(whatsappUrl);
 
-  // A non-Tawk external chat link takes priority: jump straight to it.
-  if (!isValidTawkSrc(tawkSrc) && /^https?:\/\//i.test(supportUrl)) {
+  // A non-Tawk external chat link takes priority when nothing else is set:
+  // jump straight to it.
+  if (!tawkAvailable && !hasWhatsApp && /^https?:\/\//i.test(supportUrl)) {
     redirect(supportUrl);
   }
+
+  const hasAnyChannel = tawkAvailable || hasWhatsApp;
 
   return (
     <MobileShell>
@@ -23,13 +28,21 @@ export default async function SupportPage() {
         backLabel={t.backHome}
       />
       <div className="px-3 pt-6">
-        {isValidTawkSrc(tawkSrc) ? (
-          <SupportTrigger
+        {hasAnyChannel ? (
+          <SupportLauncher
             fallbackHref="/support"
+            tawkAvailable={tawkAvailable}
+            whatsappUrl={whatsappUrl}
             className="block w-full rounded-xl bg-[var(--accent)] px-4 py-3 text-center text-sm font-bold text-white"
+            labels={{
+              title: t.supportChooseTitle,
+              webChat: t.supportWebChat,
+              whatsapp: t.supportWhatsApp,
+              cancel: t.supportCancel,
+            }}
           >
             {t.supportTitle}
-          </SupportTrigger>
+          </SupportLauncher>
         ) : (
           <p className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 text-center text-sm text-[var(--muted)]">
             {t.supportUnavailable}

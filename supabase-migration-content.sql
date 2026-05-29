@@ -97,7 +97,8 @@ where not exists (select 1 from public.faqs);
 -- ---------------------------------------------------------------------------
 insert into public.site_settings (key, value) values
   ('support_chat_url', '""'::jsonb),
-  ('tawk_src', '""'::jsonb)
+  ('tawk_src', '""'::jsonb),
+  ('whatsapp_url', '""'::jsonb)
 on conflict (key) do nothing;
 
 -- ---------------------------------------------------------------------------

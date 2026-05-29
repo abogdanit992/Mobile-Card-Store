@@ -26,6 +26,10 @@ export type Dict = {
   faqEmpty: string;
   supportTitle: string;
   supportUnavailable: string;
+  supportChooseTitle: string;
+  supportWebChat: string;
+  supportWhatsApp: string;
+  supportCancel: string;
   // download page
   downloadTitle: string;
   downloadSubtitle: string;
@@ -118,6 +122,10 @@ const en: Dict = {
   faqEmpty: "No FAQs yet.",
   supportTitle: "Online Support",
   supportUnavailable: "Live chat is being set up. Please check back soon.",
+  supportChooseTitle: "How would you like to reach us?",
+  supportWebChat: "Live chat",
+  supportWhatsApp: "WhatsApp",
+  supportCancel: "Cancel",
   downloadTitle: "Downloads",
   downloadSubtitle: "Box apps · Streaming platforms",
   officialHub: "Official download hub",
@@ -204,6 +212,10 @@ const zh: Dict = {
   faqEmpty: "暂无常见问题。",
   supportTitle: "在线客服",
   supportUnavailable: "在线客服正在接入，请稍后再试。",
+  supportChooseTitle: "请选择联系方式",
+  supportWebChat: "网页在线客服",
+  supportWhatsApp: "WhatsApp",
+  supportCancel: "取消",
   downloadTitle: "软件下载",
   downloadSubtitle: "盒子 App · 直播平台",
   officialHub: "官方下载站",
