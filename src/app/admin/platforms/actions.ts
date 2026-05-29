@@ -3,14 +3,18 @@
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
+import type { ActionResult } from "@/lib/admin/action-result";
 
 function read(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
 }
 
-export async function createPlatformAction(formData: FormData) {
+export async function createPlatformAction(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
   const nameEn = read(formData, "name_en");
-  if (!nameEn) throw new Error("English name is required.");
+  if (!nameEn) return { ok: false, message: "English name is required." };
 
   const categoryId = read(formData, "category_id");
   const sortOrder = Number(formData.get("sort_order") ?? 0);
@@ -30,18 +34,22 @@ export async function createPlatformAction(formData: FormData) {
   };
 
   const { error } = await supabase.from("platform_downloads").insert([payload]);
-  if (error) throw new Error(`Failed to create platform: ${error.message}`);
+  if (error) return { ok: false, message: `Failed to create: ${error.message}` };
 
   revalidatePath("/admin/platforms");
   revalidatePath("/download");
+  return { ok: true, message: `Created “${nameEn}”.` };
 }
 
-export async function updatePlatformAction(formData: FormData) {
+export async function updatePlatformAction(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
   const id = read(formData, "id");
-  if (!id) throw new Error("Missing platform id.");
+  if (!id) return { ok: false, message: "Missing platform id." };
 
   const nameEn = read(formData, "name_en");
-  if (!nameEn) throw new Error("English name is required.");
+  if (!nameEn) return { ok: false, message: "English name is required." };
 
   const categoryId = read(formData, "category_id");
   const sortOrder = Number(formData.get("sort_order") ?? 0);
@@ -63,36 +71,45 @@ export async function updatePlatformAction(formData: FormData) {
     .from("platform_downloads")
     .update(update)
     .eq("id", id);
-  if (error) throw new Error(`Failed to update platform: ${error.message}`);
+  if (error) return { ok: false, message: `Failed to save: ${error.message}` };
 
   revalidatePath("/admin/platforms");
   revalidatePath("/download");
+  return { ok: true, message: "Saved." };
 }
 
-export async function togglePlatformAction(formData: FormData) {
+export async function togglePlatformAction(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
   const id = read(formData, "id");
   const nextActive = read(formData, "nextActive") === "true";
-  if (!id) throw new Error("Missing platform id.");
+  if (!id) return { ok: false, message: "Missing platform id." };
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase
     .from("platform_downloads")
     .update({ active: nextActive })
     .eq("id", id);
-  if (error) throw new Error(`Failed to update platform: ${error.message}`);
+  if (error) return { ok: false, message: `Failed: ${error.message}` };
 
   revalidatePath("/admin/platforms");
   revalidatePath("/download");
+  return { ok: true, message: nextActive ? "Now visible." : "Hidden." };
 }
 
-export async function deletePlatformAction(formData: FormData) {
+export async function deletePlatformAction(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
   const id = read(formData, "id");
-  if (!id) throw new Error("Missing platform id.");
+  if (!id) return { ok: false, message: "Missing platform id." };
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.from("platform_downloads").delete().eq("id", id);
-  if (error) throw new Error(`Failed to delete platform: ${error.message}`);
+  if (error) return { ok: false, message: `Failed to delete: ${error.message}` };
 
   revalidatePath("/admin/platforms");
   revalidatePath("/download");
+  return { ok: true, message: "Deleted." };
 }

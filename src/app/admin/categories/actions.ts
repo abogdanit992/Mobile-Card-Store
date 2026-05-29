@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
+import type { ActionResult } from "@/lib/admin/action-result";
 
 function slugify(input: string) {
   return input
@@ -12,14 +13,17 @@ function slugify(input: string) {
     .replace(/^-+|-+$/g, "");
 }
 
-export async function createCategoryAction(formData: FormData) {
+export async function createCategoryAction(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
   const nameEn = String(formData.get("name_en") ?? "").trim();
   const nameZh = String(formData.get("name_zh") ?? "").trim();
   const iconUrl = String(formData.get("icon_url") ?? "").trim();
   const slugRaw = String(formData.get("slug") ?? "").trim();
   const sortOrder = Number(formData.get("sort_order") ?? 0);
 
-  if (!nameEn) throw new Error("English name is required.");
+  if (!nameEn) return { ok: false, message: "English name is required." };
 
   const slug = slugify(slugRaw || nameEn);
   const supabase = await createSupabaseServerClient();
@@ -33,22 +37,26 @@ export async function createCategoryAction(formData: FormData) {
   };
 
   const { error } = await supabase.from("categories").insert([payload]);
-  if (error) throw new Error(`Failed to create category: ${error.message}`);
+  if (error) return { ok: false, message: `Failed to create: ${error.message}` };
 
   revalidatePath("/admin/categories");
   revalidatePath("/");
+  return { ok: true, message: `Created “${nameEn}”.` };
 }
 
-export async function updateCategoryAction(formData: FormData) {
+export async function updateCategoryAction(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
   const id = String(formData.get("id") ?? "");
-  if (!id) throw new Error("Missing category id.");
+  if (!id) return { ok: false, message: "Missing category id." };
 
   const nameEn = String(formData.get("name_en") ?? "").trim();
   const nameZh = String(formData.get("name_zh") ?? "").trim();
   const iconUrl = String(formData.get("icon_url") ?? "").trim();
   const sortOrder = Number(formData.get("sort_order") ?? 0);
 
-  if (!nameEn) throw new Error("English name is required.");
+  if (!nameEn) return { ok: false, message: "English name is required." };
 
   const supabase = await createSupabaseServerClient();
   const update: Database["public"]["Tables"]["categories"]["Update"] = {
@@ -59,36 +67,45 @@ export async function updateCategoryAction(formData: FormData) {
   };
 
   const { error } = await supabase.from("categories").update(update).eq("id", id);
-  if (error) throw new Error(`Failed to update category: ${error.message}`);
+  if (error) return { ok: false, message: `Failed to save: ${error.message}` };
 
   revalidatePath("/admin/categories");
   revalidatePath("/");
+  return { ok: true, message: "Saved." };
 }
 
-export async function toggleCategoryAction(formData: FormData) {
+export async function toggleCategoryAction(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
   const id = String(formData.get("id") ?? "");
   const nextActive = String(formData.get("nextActive") ?? "") === "true";
-  if (!id) throw new Error("Missing category id.");
+  if (!id) return { ok: false, message: "Missing category id." };
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase
     .from("categories")
     .update({ active: nextActive })
     .eq("id", id);
-  if (error) throw new Error(`Failed to update category: ${error.message}`);
+  if (error) return { ok: false, message: `Failed: ${error.message}` };
 
   revalidatePath("/admin/categories");
   revalidatePath("/");
+  return { ok: true, message: nextActive ? "Now visible." : "Hidden." };
 }
 
-export async function deleteCategoryAction(formData: FormData) {
+export async function deleteCategoryAction(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
   const id = String(formData.get("id") ?? "");
-  if (!id) throw new Error("Missing category id.");
+  if (!id) return { ok: false, message: "Missing category id." };
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.from("categories").delete().eq("id", id);
-  if (error) throw new Error(`Failed to delete category: ${error.message}`);
+  if (error) return { ok: false, message: `Failed to delete: ${error.message}` };
 
   revalidatePath("/admin/categories");
   revalidatePath("/");
+  return { ok: true, message: "Deleted." };
 }

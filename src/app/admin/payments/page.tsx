@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { adminHref } from "@/lib/admin-url";
-import { SubmitButton } from "@/components/admin/submit-button";
+import { ActionForm } from "@/components/admin/action-form";
 import { updatePaymentChannelAction } from "./actions";
 
 const inputClass =
@@ -59,10 +59,13 @@ export default async function AdminPaymentsPage() {
         {channels?.map((ch) => {
           const fields = CONFIG_FIELDS[ch.provider] ?? [];
           return (
-            <form
+            <ActionForm
               key={ch.id}
               action={updatePaymentChannelAction}
               className="space-y-2 rounded-2xl border border-neutral-200 bg-white p-4"
+              buttonClassName="h-10 w-full rounded-lg bg-neutral-900 text-sm font-semibold text-white"
+              submitLabel="Save"
+              pendingLabel="Saving…"
             >
               <input type="hidden" name="id" value={ch.id} />
               <input type="hidden" name="provider" value={ch.provider} />
@@ -109,13 +112,7 @@ export default async function AdminPaymentsPage() {
                 defaultValue={ch.sort_order}
                 className={inputClass}
               />
-              <SubmitButton
-                pendingText="Saving…"
-                className="h-10 w-full rounded-lg bg-neutral-900 text-sm font-semibold text-white"
-              >
-                Save
-              </SubmitButton>
-            </form>
+            </ActionForm>
           );
         })}
       </section>

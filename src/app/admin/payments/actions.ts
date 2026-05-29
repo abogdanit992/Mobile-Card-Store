@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Json } from "@/types/database";
+import type { ActionResult } from "@/lib/admin/action-result";
 
 function read(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -14,10 +15,15 @@ const CONFIG_KEYS: Record<string, string[]> = {
   paypal: ["client_id", "client_secret", "mode"],
 };
 
-export async function updatePaymentChannelAction(formData: FormData) {
+export async function updatePaymentChannelAction(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
   const id = read(formData, "id");
   const provider = read(formData, "provider");
-  if (!id || !provider) throw new Error("Missing channel id/provider.");
+  if (!id || !provider) {
+    return { ok: false, message: "Missing channel id/provider." };
+  }
 
   const labelEn = read(formData, "label_en");
   const labelZh = read(formData, "label_zh");
@@ -42,8 +48,12 @@ export async function updatePaymentChannelAction(formData: FormData) {
     })
     .eq("id", id);
 
-  if (error) throw new Error(`Failed to update channel: ${error.message}`);
+  if (error) return { ok: false, message: `Failed to save: ${error.message}` };
 
   revalidatePath("/admin/payments");
   revalidatePath("/checkout");
+  return {
+    ok: true,
+    message: enabled ? "Saved — channel enabled." : "Saved — channel disabled.",
+  };
 }

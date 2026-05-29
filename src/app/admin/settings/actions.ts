@@ -4,8 +4,12 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import type { Json } from "@/types/database";
+import type { ActionResult } from "@/lib/admin/action-result";
 
-export async function updateLanguageSettingsAction(formData: FormData) {
+export async function updateLanguageSettingsAction(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
   const enableEn = formData.get("enable_en") === "on";
   const enableZh = formData.get("enable_zh") === "on";
   const defaultLang = String(formData.get("default_language") ?? "en");
@@ -25,8 +29,9 @@ export async function updateLanguageSettingsAction(formData: FormData) {
     { key: "default_language", value: def as unknown as Json },
   ]);
 
-  if (error) throw new Error(`Failed to save settings: ${error.message}`);
+  if (error) return { ok: false, message: `Failed to save: ${error.message}` };
 
   revalidatePath("/", "layout");
   revalidatePath("/admin/settings");
+  return { ok: true, message: "Settings saved." };
 }

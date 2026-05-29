@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { adminHref } from "@/lib/admin-url";
-import { SubmitButton } from "@/components/admin/submit-button";
+import { ActionForm } from "@/components/admin/action-form";
 import {
   createCategoryAction,
   deleteCategoryAction,
@@ -28,9 +28,13 @@ export default async function AdminCategoriesPage() {
       <h1 className="mt-1 text-2xl font-semibold text-neutral-900">Categories</h1>
       <p className="text-sm text-neutral-500">Storefront sections / box brands</p>
 
-      <form
+      <ActionForm
         action={createCategoryAction}
+        resetOnSuccess
         className="mt-4 space-y-2 rounded-2xl border border-neutral-200 bg-white p-4"
+        buttonClassName="h-10 w-full rounded-lg bg-neutral-900 text-sm font-semibold text-white"
+        submitLabel="Add category"
+        pendingLabel="Adding…"
       >
         <h2 className="text-sm font-semibold text-neutral-900">New category</h2>
         <input name="name_en" placeholder="Name (EN) *" className={inputClass} required />
@@ -44,13 +48,7 @@ export default async function AdminCategoriesPage() {
           placeholder="Sort order"
           className={inputClass}
         />
-        <SubmitButton
-          pendingText="Adding…"
-          className="h-10 w-full rounded-lg bg-neutral-900 text-sm font-semibold text-white"
-        >
-          Add category
-        </SubmitButton>
-      </form>
+      </ActionForm>
 
       {error ? (
         <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
@@ -64,7 +62,13 @@ export default async function AdminCategoriesPage() {
             key={c.id}
             className="rounded-2xl border border-neutral-200 bg-white p-4"
           >
-            <form action={updateCategoryAction} className="space-y-2">
+            <ActionForm
+              action={updateCategoryAction}
+              className="space-y-2"
+              buttonClassName="h-9 w-full rounded-lg bg-neutral-900 text-sm font-semibold text-white"
+              submitLabel="Save"
+              pendingLabel="Saving…"
+            >
               <input type="hidden" name="id" value={c.id} />
               <div className="flex items-center justify-between">
                 <span className="text-xs text-neutral-400">{c.slug}</span>
@@ -102,33 +106,28 @@ export default async function AdminCategoriesPage() {
                 defaultValue={c.sort_order}
                 className={inputClass}
               />
-              <SubmitButton
-                pendingText="Saving…"
-                className="h-9 w-full rounded-lg bg-neutral-900 text-sm font-semibold text-white"
-              >
-                Save
-              </SubmitButton>
-            </form>
+            </ActionForm>
             <div className="mt-2 flex gap-2">
-              <form action={toggleCategoryAction} className="flex-1">
+              <ActionForm
+                action={toggleCategoryAction}
+                className="flex-1"
+                buttonClassName="h-9 w-full rounded-lg border border-neutral-300 text-xs font-semibold text-neutral-700"
+                submitLabel={c.active ? "Hide" : "Show"}
+                pendingLabel="…"
+              >
                 <input type="hidden" name="id" value={c.id} />
                 <input type="hidden" name="nextActive" value={String(!c.active)} />
-                <SubmitButton
-                  pendingText="…"
-                  className="h-9 w-full rounded-lg border border-neutral-300 text-xs font-semibold text-neutral-700"
-                >
-                  {c.active ? "Hide" : "Show"}
-                </SubmitButton>
-              </form>
-              <form action={deleteCategoryAction} className="flex-1">
+              </ActionForm>
+              <ActionForm
+                action={deleteCategoryAction}
+                className="flex-1"
+                buttonClassName="h-9 w-full rounded-lg border border-red-300 text-xs font-semibold text-red-600"
+                submitLabel="Delete"
+                pendingLabel="Deleting…"
+                confirm="Delete this category? This cannot be undone."
+              >
                 <input type="hidden" name="id" value={c.id} />
-                <SubmitButton
-                  pendingText="Deleting…"
-                  className="h-9 w-full rounded-lg border border-red-300 text-xs font-semibold text-red-600"
-                >
-                  Delete
-                </SubmitButton>
-              </form>
+              </ActionForm>
             </div>
           </div>
         ))}

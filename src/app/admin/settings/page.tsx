@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { adminHref } from "@/lib/admin-url";
 import { getSiteLanguageSettings } from "@/lib/i18n/server";
-import { SubmitButton } from "@/components/admin/submit-button";
+import { ActionForm } from "@/components/admin/action-form";
 import { updateLanguageSettingsAction } from "./actions";
 
 export default async function AdminSettingsPage() {
@@ -16,9 +16,12 @@ export default async function AdminSettingsPage() {
       <h1 className="mt-1 text-2xl font-semibold text-neutral-900">Site Settings</h1>
       <p className="text-sm text-neutral-500">Storefront languages</p>
 
-      <form
+      <ActionForm
         action={updateLanguageSettingsAction}
         className="mt-4 space-y-3 rounded-2xl border border-neutral-200 bg-white p-4"
+        buttonClassName="h-10 w-full rounded-lg bg-neutral-900 text-sm font-semibold text-white"
+        submitLabel="Save settings"
+        pendingLabel="Saving…"
       >
         <p className="text-sm font-semibold text-neutral-900">Enabled languages</p>
         <label className="flex items-center gap-2 text-sm text-neutral-700">
@@ -49,14 +52,7 @@ export default async function AdminSettingsPage() {
           <option value="en">English</option>
           <option value="zh">中文</option>
         </select>
-
-        <SubmitButton
-          pendingText="Saving…"
-          className="h-10 w-full rounded-lg bg-neutral-900 text-sm font-semibold text-white"
-        >
-          Save settings
-        </SubmitButton>
-      </form>
+      </ActionForm>
     </main>
   );
 }
