@@ -24,12 +24,14 @@ export async function updateLanguageSettingsAction(
     : enabled[0];
 
   const supportChatUrl = String(formData.get("support_chat_url") ?? "").trim();
+  const tawkSrc = String(formData.get("tawk_src") ?? "").trim();
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.from("site_settings").upsert([
     { key: "enabled_languages", value: enabled as unknown as Json },
     { key: "default_language", value: def as unknown as Json },
     { key: "support_chat_url", value: supportChatUrl as unknown as Json },
+    { key: "tawk_src", value: tawkSrc as unknown as Json },
   ]);
 
   if (error) return { ok: false, message: `Failed to save: ${error.message}` };

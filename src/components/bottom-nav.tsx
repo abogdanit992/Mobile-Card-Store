@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "@/lib/i18n/server";
+import { getSupportSettings } from "@/lib/support";
+import { SupportTrigger } from "./support-trigger";
 
 const HOME_ICON =
   "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1";
@@ -25,25 +27,29 @@ function NavIcon({ d }: { d: string }) {
 
 export async function BottomNav() {
   const { t } = await getTranslations();
-  const items = [
+  const { supportUrl } = await getSupportSettings();
+  const supportFallback = /^https?:\/\//i.test(supportUrl) ? supportUrl : "/support";
+
+  const navItemClass =
+    "flex flex-col items-center gap-0.5 rounded-lg px-2 py-2 text-[10px] font-bold text-[var(--muted)] transition hover:bg-[var(--card)] hover:text-[var(--accent-soft)]";
+  const links = [
     { href: "/", label: t.navHome, icon: HOME_ICON },
     { href: "/faq", label: t.navFaq, icon: FAQ_ICON },
-    { href: "/support", label: t.navService, icon: SUPPORT_ICON },
   ];
 
   return (
     <nav className="fixed bottom-0 left-1/2 z-50 w-full max-w-md -translate-x-1/2 border-t border-[var(--border)] bg-[#0c0612]/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-lg">
       <div className="grid grid-cols-3 gap-1">
-        {items.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="flex flex-col items-center gap-0.5 rounded-lg px-2 py-2 text-[10px] font-bold text-[var(--muted)] transition hover:bg-[var(--card)] hover:text-[var(--accent-soft)]"
-          >
+        {links.map((item) => (
+          <Link key={item.href} href={item.href} className={navItemClass}>
             <NavIcon d={item.icon} />
             {item.label}
           </Link>
         ))}
+        <SupportTrigger fallbackHref={supportFallback} className={navItemClass}>
+          <NavIcon d={SUPPORT_ICON} />
+          {t.navService}
+        </SupportTrigger>
       </div>
     </nav>
   );

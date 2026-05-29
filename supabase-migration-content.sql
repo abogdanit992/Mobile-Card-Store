@@ -96,7 +96,8 @@ where not exists (select 1 from public.faqs);
 -- Tawk.to / Telegram / WhatsApp / QQ, etc.)
 -- ---------------------------------------------------------------------------
 insert into public.site_settings (key, value) values
-  ('support_chat_url', '""'::jsonb)
+  ('support_chat_url', '""'::jsonb),
+  ('tawk_src', '""'::jsonb)
 on conflict (key) do nothing;
 
 -- ---------------------------------------------------------------------------

@@ -10,13 +10,16 @@ export default async function AdminSettingsPage() {
   const settings = await getSiteLanguageSettings();
 
   const supabase = await createSupabaseServerClient();
-  const { data: supportRow } = await supabase
+  const { data: rows } = await supabase
     .from("site_settings")
-    .select("value")
-    .eq("key", "support_chat_url")
-    .maybeSingle();
-  const supportChatUrl =
-    typeof supportRow?.value === "string" ? supportRow.value : "";
+    .select("key,value")
+    .in("key", ["support_chat_url", "tawk_src"]);
+  const valueOf = (key: string) => {
+    const v = rows?.find((r) => r.key === key)?.value;
+    return typeof v === "string" ? v : "";
+  };
+  const supportChatUrl = valueOf("support_chat_url");
+  const tawkSrc = valueOf("tawk_src");
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-neutral-50 px-4 py-6">
@@ -64,18 +67,32 @@ export default async function AdminSettingsPage() {
         </select>
 
         <p className="mt-2 text-sm font-semibold text-neutral-900">
-          Online support link
+          Tawk.to live chat (recommended)
+        </p>
+        <input
+          name="tawk_src"
+          defaultValue={tawkSrc}
+          placeholder="https://embed.tawk.to/<propertyId>/<widgetId>"
+          className="h-10 w-full rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900"
+        />
+        <p className="text-xs text-neutral-500">
+          Paste the Widget embed URL from Tawk.to → Administration → Channels →
+          Chat Widget. When set, a floating chat bubble shows on the storefront
+          and the “Support” tab opens it.
+        </p>
+
+        <p className="mt-2 text-sm font-semibold text-neutral-900">
+          Fallback chat link (optional)
         </p>
         <input
           name="support_chat_url"
           defaultValue={supportChatUrl}
-          placeholder="https://tawk.to/… / https://t.me/… / https://wa.me/…"
+          placeholder="https://t.me/… / https://wa.me/… / QQ link"
           className="h-10 w-full rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900"
         />
         <p className="text-xs text-neutral-500">
-          The storefront “Support” tab opens this link. Leave blank to show a
-          “coming soon” message. Works with any free chat (Tawk.to, Telegram,
-          WhatsApp, QQ…).
+          Used only when Tawk.to above is empty. Leave both blank to show a
+          “coming soon” message.
         </p>
       </ActionForm>
     </main>
