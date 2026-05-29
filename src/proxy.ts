@@ -19,7 +19,7 @@ function copyCookies(from: NextResponse, to: NextResponse) {
   });
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const hostname = normalizeHostname(
     request.headers.get("x-forwarded-host") ?? request.headers.get("host"),
   );
