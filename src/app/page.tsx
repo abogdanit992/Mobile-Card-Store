@@ -4,53 +4,81 @@ import { ProductCard } from "@/components/product-card";
 import { CategoryNav } from "@/components/category-nav";
 import { StoreHeader } from "@/components/store-header";
 import { StoreTopLinks } from "@/components/store-top-links";
-import { boxAppBySort } from "@/data/platforms";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { getLocale } from "@/lib/i18n/server";
+import { getSiteLanguageSettings } from "@/lib/i18n/server";
+import { getDictionary } from "@/lib/i18n/dictionaries";
+import { pickLocalized } from "@/lib/i18n/config";
 
 type HomePageProps = {
   searchParams: Promise<{
+    cat?: string;
     sort?: string;
   }>;
 };
 
 export default async function Home({ searchParams }: HomePageProps) {
   const params = await searchParams;
-  const sort = params.sort ?? "1";
-  const activeBrand = boxAppBySort(sort);
+  const locale = await getLocale();
+  const langSettings = await getSiteLanguageSettings();
+  const t = getDictionary(locale);
 
   const supabase = await createSupabaseServerClient();
+
+  const { data: categories } = await supabase
+    .from("categories")
+    .select("id,slug,name_en,name_zh,icon_url")
+    .eq("active", true)
+    .order("sort_order", { ascending: true });
+
+  const cats = categories ?? [];
+  const activeCat = params.cat && cats.some((c) => c.id === params.cat)
+    ? params.cat
+    : (cats[0]?.id ?? null);
+
   let query = supabase
     .from("products")
-    .select("id,title,description,price,cover,active,created_at,category_sort")
+    .select("id,title,name_en,name_zh,price,cover,category_id,active,created_at")
     .eq("active", true)
-    .eq("category_sort", sort)
     .order("created_at", { ascending: false });
 
+  if (activeCat) {
+    query = query.eq("category_id", activeCat);
+  }
+
   const { data: products, error } = await query;
+  const activeCatName = cats.find((c) => c.id === activeCat);
 
   return (
     <MobileShell>
       <StoreHeader
-        title={activeBrand ? `${activeBrand.name}专区` : "精选会员"}
-        subtitle="私密开通 · 即时到账"
+        title={
+          activeCatName
+            ? pickLocalized(locale, activeCatName.name_en, activeCatName.name_zh)
+            : t.featured
+        }
+        subtitle={t.instantDelivery}
+        rightSlot={
+          <LanguageSwitcher locale={locale} enabled={langSettings.enabled} />
+        }
       />
 
       <div className="px-3 pt-3">
-        <StoreTopLinks />
-        <section className="relative overflow-hidden rounded-xl border border-[var(--border)] bg-gradient-to-br from-[#2a0f24] via-[#1a0a18] to-black p-4">
+        <StoreTopLinks t={t} />
+
+        <section className="relative mt-3 overflow-hidden rounded-xl border border-[var(--border)] bg-gradient-to-br from-[#2a0f24] via-[#1a0a18] to-black p-4">
           <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-[var(--accent)]/20 blur-2xl" />
           <p className="relative text-[10px] font-black uppercase tracking-[0.2em] text-[var(--accent-soft)]">
-            Members Only
+            {t.membersOnly}
           </p>
           <h2 className="relative mt-1 text-base font-black text-white">
-            限时 VIP 卡密专区
+            {t.vipZone}
           </h2>
-          <p className="relative mt-1 text-xs text-[var(--muted)]">
-            付款即发卡 · 独享通道 · 24h 自动交付
-          </p>
+          <p className="relative mt-1 text-xs text-[var(--muted)]">{t.vipZoneDesc}</p>
         </section>
 
         <div className="mt-3">
-          <CategoryNav activeSort={sort} />
+          <CategoryNav categories={cats} activeId={activeCat} locale={locale} />
         </div>
 
         {error ? (
@@ -63,15 +91,16 @@ export default async function Home({ searchParams }: HomePageProps) {
               <ProductCard
                 key={product.id}
                 id={product.id}
-                title={product.title}
+                title={pickLocalized(locale, product.name_en, product.name_zh, product.title)}
                 price={product.price}
                 cover={product.cover}
+                getLabel={t.get}
               />
             ))}
           </section>
         ) : (
           <section className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 text-center text-sm text-[var(--muted)]">
-            暂无商品，请先在后台上架
+            {t.noProducts}
           </section>
         )}
       </div>

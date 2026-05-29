@@ -3,6 +3,7 @@ import { formatPrice } from "@/lib/format";
 import { MobileShell } from "@/components/mobile-shell";
 import { PrimaryButton } from "@/components/primary-button";
 import { StoreHeader } from "@/components/store-header";
+import { getTranslations } from "@/lib/i18n/server";
 
 type CardsPageProps = {
   searchParams: Promise<{
@@ -12,14 +13,15 @@ type CardsPageProps = {
 
 export default async function CardsPage({ searchParams }: CardsPageProps) {
   const { orderId } = await searchParams;
+  const { t } = await getTranslations();
 
   if (!orderId) {
     return (
       <MobileShell>
-        <StoreHeader title="我的卡密" backHref="/" />
+        <StoreHeader title={t.myCards} backHref="/" />
         <div className="p-4">
           <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 text-sm text-[var(--muted)]">
-            请先完成支付流程
+            {t.finishPaymentFirst}
           </section>
         </div>
       </MobileShell>
@@ -43,7 +45,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
 
   return (
     <MobileShell>
-      <StoreHeader title="卡密交付" subtitle="请妥善保存" backHref="/" />
+      <StoreHeader title={t.cardDelivery} subtitle={t.keepSafe} backHref="/" />
 
       <div className="px-3 pt-3">
         {errorMessage ? (
@@ -53,28 +55,28 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
         ) : card ? (
           <section className="rounded-xl border border-[var(--accent)]/50 bg-[var(--card)] p-5 glow-pink">
             <p className="text-center text-[10px] font-black uppercase tracking-[0.2em] text-[var(--accent-soft)]">
-              Your VIP Code
+              {t.yourVipCode}
             </p>
             <p className="mt-4 break-all rounded-lg border border-[var(--border)] bg-black/60 p-4 text-center font-mono text-lg font-bold tracking-widest text-[var(--gold)]">
               {card.code}
             </p>
             {order ? (
               <p className="mt-3 text-center text-xs text-[var(--muted)]">
-                订单 {order.id.slice(0, 8)}… · {formatPrice(order.amount)} · {order.status}
+                {t.order} {order.id.slice(0, 8)}… · {formatPrice(order.amount)} · {order.status}
               </p>
             ) : null}
             <p className="mt-4 text-center text-[10px] text-[var(--muted)]">
-              截图保存 · 勿泄露 · 复制后到 App 内激活
+              {t.saveScreenshot}
             </p>
           </section>
         ) : (
           <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 text-sm text-[var(--muted)]">
-            该订单尚未分配卡密
+            {t.cardNotAllocated}
           </section>
         )}
 
         <div className="mt-5">
-          <PrimaryButton href="/">继续逛逛</PrimaryButton>
+          <PrimaryButton href="/">{t.keepShopping}</PrimaryButton>
         </div>
       </div>
     </MobileShell>

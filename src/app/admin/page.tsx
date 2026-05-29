@@ -3,10 +3,15 @@ import { adminSignOutAction } from "@/app/auth/actions";
 import { adminHref } from "@/lib/admin-url";
 
 const adminLinks = [
-  { path: "/admin/products", label: "商品管理", desc: "上架、下架与新建" },
-  { path: "/admin/orders", label: "订单管理", desc: "查看支付与发卡状态" },
-  { path: "/admin/cards", label: "卡密库存", desc: "导入与库存统计" },
-  { path: "/admin/users", label: "用户管理", desc: "注册用户列表" },
+  { path: "/admin/products", label: "商品管理 Products", desc: "新建 / 编辑 / 删除 / 上下架" },
+  { path: "/admin/categories", label: "分类管理 Categories", desc: "主站板块 / 排序 / 图标" },
+  { path: "/admin/platforms", label: "平台下载 Downloads", desc: "各直播软件下载地址" },
+  { path: "/admin/payments", label: "支付通道 Payments", desc: "Cryptomus / Stripe / PayPal" },
+  { path: "/admin/orders", label: "订单管理 Orders", desc: "查看支付与发卡状态" },
+  { path: "/admin/customers", label: "客户档案 Customers", desc: "销售数据 / 群发导出" },
+  { path: "/admin/cards", label: "卡密库存 Cards", desc: "导入与库存统计" },
+  { path: "/admin/users", label: "用户管理 Users", desc: "注册用户列表" },
+  { path: "/admin/settings", label: "站点设置 Settings", desc: "语言 / 上线开关" },
 ];
 
 export default async function AdminHomePage() {

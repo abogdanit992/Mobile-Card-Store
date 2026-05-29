@@ -1,22 +1,35 @@
 import Image from "next/image";
 import Link from "next/link";
-import { boxApps } from "@/data/platforms";
+import type { Locale } from "@/lib/i18n/config";
+import { pickLocalized } from "@/lib/i18n/config";
 
-type CategoryNavProps = {
-  activeSort: string;
+export type CategoryNavItem = {
+  id: string;
+  slug: string;
+  name_en: string;
+  name_zh: string | null;
+  icon_url: string | null;
 };
 
-export function CategoryNav({ activeSort }: CategoryNavProps) {
+type CategoryNavProps = {
+  categories: CategoryNavItem[];
+  activeId: string | null;
+  locale: Locale;
+};
+
+export function CategoryNav({ categories, activeId, locale }: CategoryNavProps) {
+  if (categories.length === 0) return null;
+
   return (
     <div className="grid grid-cols-4 gap-2">
-      {boxApps.map((app) => {
-        const href = app.sort === "1" ? "/?sort=1" : `/?sort=${app.sort}`;
-        const active = activeSort === app.sort;
+      {categories.map((cat) => {
+        const active = activeId === cat.id;
+        const name = pickLocalized(locale, cat.name_en, cat.name_zh, cat.slug);
 
         return (
           <Link
-            key={app.slug}
-            href={href}
+            key={cat.id}
+            href={`/?cat=${cat.id}`}
             className={`flex flex-col items-center gap-1 rounded-xl border p-2 transition ${
               active
                 ? "border-[var(--accent-soft)] bg-[var(--card-hover)]"
@@ -24,21 +37,27 @@ export function CategoryNav({ activeSort }: CategoryNavProps) {
             }`}
           >
             <div className="relative h-10 w-10 overflow-hidden rounded-lg bg-black/40">
-              <Image
-                src={app.categoryLogo}
-                alt={app.name}
-                fill
-                className="object-cover"
-                sizes="40px"
-                unoptimized
-              />
+              {cat.icon_url ? (
+                <Image
+                  src={cat.icon_url}
+                  alt={name}
+                  fill
+                  className="object-cover"
+                  sizes="40px"
+                  unoptimized
+                />
+              ) : (
+                <span className="flex h-full items-center justify-center text-lg">
+                  💎
+                </span>
+              )}
             </div>
             <span
-              className={`text-[10px] font-bold ${
+              className={`line-clamp-1 text-[10px] font-bold ${
                 active ? "text-[var(--accent-soft)]" : "text-[var(--muted)]"
               }`}
             >
-              {app.name}
+              {name}
             </span>
           </Link>
         );

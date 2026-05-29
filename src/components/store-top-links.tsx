@@ -1,36 +1,39 @@
 import Link from "next/link";
-import { DOWNLOAD_HUB_BACKUP, DOWNLOAD_HUB_PRIMARY } from "@/data/platforms";
+import type { Dict } from "@/lib/i18n/dictionaries";
 
-export function StoreTopLinks() {
+const HUB_PRIMARY = "https://juhe.live";
+const HUB_BACKUP = "http://103.236.57.111:8090";
+
+export function StoreTopLinks({ t }: { t: Dict }) {
   return (
     <nav className="flex gap-2 overflow-x-auto pb-1 text-[10px] font-bold [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <Link
         href="/download"
         className="shrink-0 rounded-full border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-[var(--muted)] hover:text-white"
       >
-        软件下载
+        {t.softwareDownload}
       </Link>
       <a
-        href={DOWNLOAD_HUB_PRIMARY}
+        href={HUB_PRIMARY}
         target="_blank"
         rel="noopener noreferrer"
         className="shrink-0 rounded-full border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-[var(--muted)] hover:text-white"
       >
-        聚合下载
+        {t.hubDownload}
       </a>
       <a
-        href={DOWNLOAD_HUB_BACKUP}
+        href={HUB_BACKUP}
         target="_blank"
         rel="noopener noreferrer"
         className="shrink-0 rounded-full border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-[var(--muted)] hover:text-white"
       >
-        备用下载
+        {t.backupDownload}
       </a>
       <Link
         href="/orders/lookup"
         className="shrink-0 rounded-full border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-[var(--muted)] hover:text-white"
       >
-        查询订单
+        {t.queryOrder}
       </Link>
     </nav>
   );

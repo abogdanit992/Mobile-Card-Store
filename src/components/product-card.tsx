@@ -7,9 +7,16 @@ type ProductCardProps = {
   title: string;
   price: number;
   cover: string | null;
+  getLabel?: string;
 };
 
-export function ProductCard({ id, title, price, cover }: ProductCardProps) {
+export function ProductCard({
+  id,
+  title,
+  price,
+  cover,
+  getLabel = "Get",
+}: ProductCardProps) {
   const gradient = productGradientClass(title);
   const badge = productBadge(title);
 
@@ -48,7 +55,7 @@ export function ProductCard({ id, title, price, cover }: ProductCardProps) {
       <div className="flex items-center justify-between gap-2 px-2.5 py-2">
         <p className="text-sm font-black text-[var(--gold)]">{formatPrice(price)}</p>
         <span className="rounded-full bg-[var(--accent)] px-2.5 py-1 text-[9px] font-bold uppercase text-white">
-          Get
+          {getLabel}
         </span>
       </div>
     </Link>

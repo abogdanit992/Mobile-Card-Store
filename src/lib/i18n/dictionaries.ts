@@ -1,0 +1,251 @@
+import type { Locale } from "./config";
+
+export type Dict = {
+  brand: string;
+  membersOnly: string;
+  vipZone: string;
+  vipZoneDesc: string;
+  featured: string;
+  instantDelivery: string;
+  softwareDownload: string;
+  hubDownload: string;
+  backupDownload: string;
+  queryOrder: string;
+  noProducts: string;
+  buyNow: string;
+  get: string;
+  // nav
+  navHome: string;
+  navAccount: string;
+  navQuery: string;
+  // download page
+  downloadTitle: string;
+  downloadSubtitle: string;
+  officialHub: string;
+  mainDownload: string;
+  backupAddress: string;
+  boxApps: string;
+  boxAppsDesc: string;
+  streamingApps: string;
+  streamingDesc: string;
+  buyCard: string;
+  detailPage: string;
+  cloudBackup: string;
+  // checkout
+  checkout: string;
+  confirmOrder: string;
+  orderInfo: string;
+  contactInfo: string;
+  contactInfoHint: string;
+  email: string;
+  phone: string;
+  emailHint: string;
+  phoneHint: string;
+  emailOptional: string;
+  phoneOptional: string;
+  atLeastOneContact: string;
+  selectPayment: string;
+  noPaymentChannels: string;
+  payWith: string;
+  pay: string;
+  invalidEmail: string;
+  invalidPhone: string;
+  selectChannelFirst: string;
+  // generic
+  back: string;
+  backHome: string;
+  loading: string;
+  cancel: string;
+  // lookup
+  lookupTitle: string;
+  lookupSubtitle: string;
+  lookupQuery: string;
+  lookupNeedOne: string;
+  lookupNotFound: string;
+  // account
+  accountTitle: string;
+  accountSubtitle: string;
+  loginPrompt: string;
+  login: string;
+  register: string;
+  lookupHint: string;
+  verifiedEmail: string;
+  signOut: string;
+  myOrders: string;
+  noOrders: string;
+  viewCard: string;
+  // cards
+  myCards: string;
+  cardDelivery: string;
+  keepSafe: string;
+  finishPaymentFirst: string;
+  yourVipCode: string;
+  order: string;
+  cardNotAllocated: string;
+  saveScreenshot: string;
+  keepShopping: string;
+};
+
+const en: Dict = {
+  brand: "VIP Lounge",
+  membersOnly: "Members Only",
+  vipZone: "Limited VIP Card Zone",
+  vipZoneDesc: "Pay & receive instantly · Private channel · 24h delivery",
+  featured: "Featured Membership",
+  instantDelivery: "Private activation · Instant delivery",
+  softwareDownload: "Downloads",
+  hubDownload: "App Hub",
+  backupDownload: "Backup",
+  queryOrder: "Track Order",
+  noProducts: "No products yet. Add them in the admin.",
+  buyNow: "Buy Now",
+  get: "Get",
+  navHome: "Home",
+  navAccount: "Account",
+  navQuery: "Track",
+  downloadTitle: "Downloads",
+  downloadSubtitle: "Box apps · Streaming platforms",
+  officialHub: "Official download hub",
+  mainDownload: "Main site",
+  backupAddress: "Backup address",
+  boxApps: "Aggregator Box Apps",
+  boxAppsDesc: "Matches the card products; activate with a card after install",
+  streamingApps: "Streaming Apps",
+  streamingDesc: "From juhe.live; opens detail page when no direct link",
+  buyCard: "Buy Card",
+  detailPage: "Details",
+  cloudBackup: "Cloud / Backup",
+  checkout: "Checkout",
+  confirmOrder: "Confirm Order",
+  orderInfo: "Order details",
+  contactInfo: "Contact info",
+  contactInfoHint: "No account needed — enter email or phone to receive & track your card.",
+  email: "Email",
+  phone: "Phone",
+  emailHint: "Card is emailed here (recommended)",
+  phoneHint: "For order lookup",
+  emailOptional: "Email (recommended)",
+  phoneOptional: "Phone (optional)",
+  atLeastOneContact: "Please enter an email or a phone number",
+  selectPayment: "Select payment method",
+  noPaymentChannels: "No payment method available. Please contact support.",
+  payWith: "Pay with",
+  pay: "Pay",
+  invalidEmail: "Please enter a valid email",
+  invalidPhone: "Please enter a valid phone",
+  selectChannelFirst: "Please select a payment method",
+  back: "Back",
+  backHome: "Back to home",
+  loading: "Loading…",
+  cancel: "Cancel",
+  lookupTitle: "Track Order",
+  lookupSubtitle: "Look up by the email or phone you used",
+  lookupQuery: "Search",
+  lookupNeedOne: "Enter the email or phone you used at checkout",
+  lookupNotFound: "No orders found",
+  accountTitle: "Account",
+  accountSubtitle: "Account & orders",
+  loginPrompt: "Register and verify your email to view your order history here.",
+  login: "Sign in",
+  register: "Sign up",
+  lookupHint: "Not logged in? Look up by email →",
+  verifiedEmail: "Verified email",
+  signOut: "Sign out",
+  myOrders: "My orders",
+  noOrders: "No orders yet. Browse the store.",
+  viewCard: "View card →",
+  myCards: "My Cards",
+  cardDelivery: "Card Delivery",
+  keepSafe: "Please keep it safe",
+  finishPaymentFirst: "Please complete payment first",
+  yourVipCode: "Your VIP Code",
+  order: "Order",
+  cardNotAllocated: "No card allocated to this order yet",
+  saveScreenshot: "Screenshot it · keep private · activate in the app",
+  keepShopping: "Keep shopping",
+};
+
+const zh: Dict = {
+  brand: "VIP Lounge",
+  membersOnly: "会员专区",
+  vipZone: "限时 VIP 卡密专区",
+  vipZoneDesc: "付款即发卡 · 独享通道 · 24h 自动交付",
+  featured: "精选会员",
+  instantDelivery: "私密开通 · 即时到账",
+  softwareDownload: "软件下载",
+  hubDownload: "聚合下载",
+  backupDownload: "备用下载",
+  queryOrder: "查询订单",
+  noProducts: "暂无商品，请先在后台上架",
+  buyNow: "立即购买",
+  get: "购买",
+  navHome: "首页",
+  navAccount: "我的",
+  navQuery: "查单",
+  downloadTitle: "软件下载",
+  downloadSubtitle: "聚合盒子 · 直播平台",
+  officialHub: "官方聚合下载站",
+  mainDownload: "主站下载",
+  backupAddress: "备用地址",
+  boxApps: "聚合直播盒子",
+  boxAppsDesc: "与发卡商品对应，安装后在本站购买卡密激活",
+  streamingApps: "直播平台 App",
+  streamingDesc: "来源 juhe.live，无直链时跳转详情页",
+  buyCard: "购买卡密",
+  detailPage: "详情页",
+  cloudBackup: "网盘/备用",
+  checkout: "结算",
+  confirmOrder: "确认订单",
+  orderInfo: "订单信息",
+  contactInfo: "联系信息",
+  contactInfoHint: "无需注册——填写邮箱或手机号即可接收并查询卡密。",
+  email: "邮箱",
+  phone: "手机号",
+  emailHint: "卡密将发送到此邮箱（推荐）",
+  phoneHint: "用于订单查询",
+  emailOptional: "邮箱（推荐）",
+  phoneOptional: "手机号（可选）",
+  atLeastOneContact: "请至少填写邮箱或手机号其一",
+  selectPayment: "选择支付方式",
+  noPaymentChannels: "暂无可用支付方式，请联系客服。",
+  payWith: "使用",
+  pay: "支付",
+  invalidEmail: "请填写有效邮箱",
+  invalidPhone: "请填写有效手机号",
+  selectChannelFirst: "请选择支付方式",
+  back: "返回",
+  backHome: "返回首页",
+  loading: "加载中…",
+  cancel: "取消返回",
+  lookupTitle: "查询订单",
+  lookupSubtitle: "用下单时的邮箱或手机号查询",
+  lookupQuery: "查询",
+  lookupNeedOne: "请输入下单时填写的邮箱或手机号",
+  lookupNotFound: "未找到相关订单",
+  accountTitle: "我的",
+  accountSubtitle: "账户与订单",
+  loginPrompt: "使用邮箱注册并验证后，可在此查看订单记录。",
+  login: "登录",
+  register: "注册",
+  lookupHint: "未登录？用邮箱查单 →",
+  verifiedEmail: "已验证邮箱",
+  signOut: "退出登录",
+  myOrders: "我的订单",
+  noOrders: "暂无订单，去首页选购吧。",
+  viewCard: "查看卡密 →",
+  myCards: "我的卡密",
+  cardDelivery: "卡密交付",
+  keepSafe: "请妥善保存",
+  finishPaymentFirst: "请先完成支付流程",
+  yourVipCode: "您的卡密",
+  order: "订单",
+  cardNotAllocated: "该订单尚未分配卡密",
+  saveScreenshot: "截图保存 · 勿泄露 · 复制后到 App 内激活",
+  keepShopping: "继续逛逛",
+};
+
+const dictionaries: Record<Locale, Dict> = { en, zh };
+
+export function getDictionary(locale: Locale): Dict {
+  return dictionaries[locale];
+}

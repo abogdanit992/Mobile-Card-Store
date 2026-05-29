@@ -5,6 +5,8 @@ import { formatPrice, productBadge, productGradientClass } from "@/lib/format";
 import { MobileShell } from "@/components/mobile-shell";
 import { PrimaryButton } from "@/components/primary-button";
 import { StoreHeader } from "@/components/store-header";
+import { getTranslations } from "@/lib/i18n/server";
+import { pickLocalized } from "@/lib/i18n/config";
 
 type ProductDetailPageProps = {
   params: Promise<{
@@ -16,11 +18,12 @@ export default async function ProductDetailPage({
   params,
 }: ProductDetailPageProps) {
   const { id } = await params;
+  const { locale, t } = await getTranslations();
   const supabase = await createSupabaseServerClient();
 
   const { data: product, error } = await supabase
     .from("products")
-    .select("id,title,description,price,cover,active")
+    .select("id,title,name_en,name_zh,description,description_en,description_zh,price,cover,active")
     .eq("id", id)
     .eq("active", true)
     .maybeSingle();
@@ -41,12 +44,19 @@ export default async function ProductDetailPage({
     notFound();
   }
 
+  const productName = pickLocalized(locale, product.name_en, product.name_zh, product.title);
+  const productDesc = pickLocalized(
+    locale,
+    product.description_en,
+    product.description_zh,
+    product.description ?? "",
+  );
   const gradient = productGradientClass(product.title);
   const badge = productBadge(product.title);
 
   return (
     <MobileShell showNav={false}>
-      <StoreHeader title={product.title} backHref="/" backLabel="返回列表" />
+      <StoreHeader title={productName} backHref="/" backLabel={t.back} />
 
       <div className="px-3 pb-28">
         <section className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)]">
@@ -54,7 +64,7 @@ export default async function ProductDetailPage({
             {product.cover ? (
               <Image
                 src={product.cover}
-                alt={product.title}
+                alt={productName}
                 fill
                 className="object-cover"
                 sizes="448px"
@@ -78,20 +88,22 @@ export default async function ProductDetailPage({
               {formatPrice(product.price)}
             </p>
             <p className="text-sm leading-relaxed text-[var(--muted)]">
-              {product.description ||
-                "付款后自动发放独享卡密，复制即可激活会员。私密、快速、稳定。"}
+              {productDesc ||
+                (locale === "zh"
+                  ? "付款后自动发放独享卡密，复制即可激活会员。私密、快速、稳定。"
+                  : "An exclusive card code is delivered instantly after payment. Copy it to activate. Private, fast, reliable.")}
             </p>
             <ul className="space-y-1 text-xs text-[var(--muted)]">
-              <li>🔥 即时自动发卡</li>
-              <li>🔒 独享卡密不重复</li>
-              <li>⚡ 7×24 秒级到账</li>
+              <li>{locale === "zh" ? "🔥 即时自动发卡" : "🔥 Instant auto delivery"}</li>
+              <li>{locale === "zh" ? "🔒 独享卡密不重复" : "🔒 Unique, non-reused codes"}</li>
+              <li>{locale === "zh" ? "⚡ 7×24 秒级到账" : "⚡ 24/7 delivery in seconds"}</li>
             </ul>
           </div>
         </section>
 
         <div className="fixed bottom-0 left-1/2 z-40 w-full max-w-md -translate-x-1/2 border-t border-[var(--border)] bg-[#0c0612]/95 p-3 backdrop-blur-md">
           <PrimaryButton href={`/checkout?productId=${product.id}`}>
-            立即开通 {formatPrice(product.price)}
+            {t.buyNow} {formatPrice(product.price)}
           </PrimaryButton>
         </div>
       </div>

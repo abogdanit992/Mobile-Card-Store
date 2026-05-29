@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatPrice } from "@/lib/format";
 import { MobileShell } from "@/components/mobile-shell";
 import { StoreHeader } from "@/components/store-header";
+import { getTranslations } from "@/lib/i18n/server";
 
 type LookupPageProps = {
   searchParams: Promise<{
@@ -13,7 +14,10 @@ type LookupPageProps = {
 
 export default async function OrderLookupPage({ searchParams }: LookupPageProps) {
   const { email, phone } = await searchParams;
+  const { locale, t } = await getTranslations();
   const normalizedEmail = email?.trim().toLowerCase();
+  const normalizedPhone = phone?.trim();
+  const hasQuery = Boolean(normalizedEmail || normalizedPhone);
 
   let orders: Array<{
     id: string;
@@ -24,17 +28,19 @@ export default async function OrderLookupPage({ searchParams }: LookupPageProps)
   }> = [];
   let errorMessage: string | null = null;
 
-  if (normalizedEmail) {
+  if (hasQuery) {
     const supabase = await createSupabaseServerClient();
     let query = supabase
       .from("orders")
       .select("id,amount,status,created_at,contact_phone,contact_email")
-      .eq("contact_email", normalizedEmail)
       .order("created_at", { ascending: false })
       .limit(50);
 
-    if (phone?.trim()) {
-      query = query.eq("contact_phone", phone.trim());
+    if (normalizedEmail) {
+      query = query.eq("contact_email", normalizedEmail);
+    }
+    if (normalizedPhone) {
+      query = query.eq("contact_phone", normalizedPhone);
     }
 
     const { data, error } = await query;
@@ -47,26 +53,27 @@ export default async function OrderLookupPage({ searchParams }: LookupPageProps)
 
   return (
     <MobileShell>
-      <StoreHeader title="查询订单" subtitle="使用下单邮箱查询" backHref="/" />
+      <StoreHeader title={t.lookupTitle} subtitle={t.lookupSubtitle} backHref="/" />
 
       <div className="px-3 pt-3">
         <form className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+          <p className="text-xs text-[var(--muted)]">{t.lookupNeedOne}</p>
           <div>
-            <label className="text-xs text-[var(--muted)]">邮箱（必填）</label>
+            <label className="text-xs text-[var(--muted)]">{t.email}</label>
             <input
               name="email"
               type="email"
-              required
+              inputMode="email"
               defaultValue={normalizedEmail ?? ""}
               className="mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-black/30 px-3 text-sm text-white"
             />
           </div>
           <div>
-            <label className="text-xs text-[var(--muted)]">手机号（可选，精确匹配）</label>
+            <label className="text-xs text-[var(--muted)]">{t.phone}</label>
             <input
               name="phone"
               type="tel"
-              defaultValue={phone ?? ""}
+              defaultValue={normalizedPhone ?? ""}
               className="mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-black/30 px-3 text-sm text-white"
             />
           </div>
@@ -74,7 +81,7 @@ export default async function OrderLookupPage({ searchParams }: LookupPageProps)
             type="submit"
             className="h-11 w-full rounded-xl bg-[var(--accent)] text-sm font-bold text-white"
           >
-            查询
+            {t.lookupQuery}
           </button>
         </form>
 
@@ -82,7 +89,7 @@ export default async function OrderLookupPage({ searchParams }: LookupPageProps)
           <p className="mt-3 text-sm text-red-400">{errorMessage}</p>
         ) : null}
 
-        {normalizedEmail ? (
+        {hasQuery ? (
           <section className="mt-4 grid gap-2">
             {orders.length > 0 ? (
               orders.map((order) => (
@@ -92,20 +99,22 @@ export default async function OrderLookupPage({ searchParams }: LookupPageProps)
                   className="block rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 transition hover:border-[var(--accent-soft)]"
                 >
                   <p className="text-xs text-[var(--muted)]">
-                    {new Date(order.created_at).toLocaleString("zh-CN")}
+                    {new Date(order.created_at).toLocaleString(
+                      locale === "zh" ? "zh-CN" : "en-US",
+                    )}
                   </p>
                   <p className="mt-1 font-bold text-[var(--gold)]">
                     {formatPrice(order.amount)} · {order.status}
                   </p>
                   <p className="mt-1 text-[10px] text-[var(--muted)]">
-                    订单 {order.id.slice(0, 8)}…
+                    {t.order} {order.id.slice(0, 8)}…
                     {order.contact_phone ? ` · ${order.contact_phone}` : ""}
                   </p>
-                  <p className="mt-2 text-xs text-[var(--accent-soft)]">查看卡密 →</p>
+                  <p className="mt-2 text-xs text-[var(--accent-soft)]">{t.viewCard}</p>
                 </Link>
               ))
             ) : (
-              <p className="text-center text-sm text-[var(--muted)]">未找到相关订单</p>
+              <p className="text-center text-sm text-[var(--muted)]">{t.lookupNotFound}</p>
             )}
           </section>
         ) : null}

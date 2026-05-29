@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { adminHref } from "@/lib/admin-url";
-import { createProductAction, toggleProductStatusAction } from "./actions";
+import {
+  createProductAction,
+  deleteProductAction,
+  toggleProductStatusAction,
+  updateProductAction,
+} from "./actions";
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat("en-US", {
@@ -11,13 +16,48 @@ function formatPrice(value: number) {
   }).format(value);
 }
 
+const inputClass =
+  "h-10 w-full rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900";
+
+type CategoryOption = { id: string; name_en: string };
+
+function CategorySelect({
+  categories,
+  value,
+}: {
+  categories: CategoryOption[];
+  value?: string | null;
+}) {
+  return (
+    <select name="category_id" defaultValue={value ?? ""} className={inputClass}>
+      <option value="">— No category —</option>
+      {categories.map((c) => (
+        <option key={c.id} value={c.id}>
+          {c.name_en}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 export default async function AdminProductsPage() {
   const backHref = await adminHref("/admin");
   const supabase = await createSupabaseServerClient();
-  const { data: products, error } = await supabase
-    .from("products")
-    .select("id,title,price,active,created_at")
-    .order("created_at", { ascending: false });
+
+  const [{ data: categories }, { data: products, error }] = await Promise.all([
+    supabase
+      .from("categories")
+      .select("id,name_en")
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("products")
+      .select(
+        "id,title,name_en,name_zh,description_en,description_zh,price,cover,category_id,active,created_at",
+      )
+      .order("created_at", { ascending: false }),
+  ]);
+
+  const cats = categories ?? [];
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-neutral-50 px-4 py-6">
@@ -33,32 +73,29 @@ export default async function AdminProductsPage() {
       <section className="rounded-2xl border border-neutral-200 bg-white p-4">
         <h2 className="text-sm font-medium text-neutral-900">Create product</h2>
         <form action={createProductAction} className="mt-3 grid gap-2">
-          <input
-            name="title"
-            type="text"
-            required
-            placeholder="Title"
-            className="h-10 rounded-lg border border-neutral-300 px-3 text-sm"
-          />
+          <input name="name_en" required placeholder="Name (EN) *" className={inputClass} />
+          <input name="name_zh" placeholder="名称 (中文)" className={inputClass} />
           <input
             name="price"
             type="number"
             min="0"
             step="1"
             required
-            placeholder="Price"
-            className="h-10 rounded-lg border border-neutral-300 px-3 text-sm"
+            placeholder="Price (USD)"
+            className={inputClass}
           />
-          <input
-            name="cover"
-            type="text"
-            placeholder="Cover URL (optional)"
-            className="h-10 rounded-lg border border-neutral-300 px-3 text-sm"
+          <CategorySelect categories={cats} />
+          <input name="cover" placeholder="Cover URL (optional)" className={inputClass} />
+          <textarea
+            name="description_en"
+            rows={2}
+            placeholder="Description (EN)"
+            className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
           />
           <textarea
-            name="description"
-            rows={3}
-            placeholder="Description (optional)"
+            name="description_zh"
+            rows={2}
+            placeholder="描述 (中文)"
             className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
           />
           <button
@@ -81,15 +118,8 @@ export default async function AdminProductsPage() {
               key={product.id}
               className="rounded-2xl border border-neutral-200 bg-white p-4"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-sm font-medium text-neutral-900">
-                    {product.title}
-                  </h3>
-                  <p className="mt-1 text-xs text-neutral-600">
-                    {formatPrice(product.price)}
-                  </p>
-                </div>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-neutral-600">{formatPrice(product.price)}</p>
                 <span
                   className={`rounded-full px-2 py-1 text-xs ${
                     product.active
@@ -101,20 +131,83 @@ export default async function AdminProductsPage() {
                 </span>
               </div>
 
-              <form action={toggleProductStatusAction} className="mt-3">
+              <form action={updateProductAction} className="mt-2 grid gap-2">
                 <input type="hidden" name="id" value={product.id} />
                 <input
-                  type="hidden"
-                  name="nextActive"
-                  value={product.active ? "false" : "true"}
+                  name="name_en"
+                  required
+                  defaultValue={product.name_en ?? product.title}
+                  className={inputClass}
+                />
+                <input
+                  name="name_zh"
+                  defaultValue={product.name_zh ?? ""}
+                  placeholder="中文名"
+                  className={inputClass}
+                />
+                <input
+                  name="price"
+                  type="number"
+                  min="0"
+                  step="1"
+                  required
+                  defaultValue={product.price}
+                  className={inputClass}
+                />
+                <CategorySelect categories={cats} value={product.category_id} />
+                <input
+                  name="cover"
+                  defaultValue={product.cover ?? ""}
+                  placeholder="Cover URL"
+                  className={inputClass}
+                />
+                <textarea
+                  name="description_en"
+                  rows={2}
+                  defaultValue={product.description_en ?? ""}
+                  placeholder="Description (EN)"
+                  className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+                />
+                <textarea
+                  name="description_zh"
+                  rows={2}
+                  defaultValue={product.description_zh ?? ""}
+                  placeholder="描述 (中文)"
+                  className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
                 />
                 <button
                   type="submit"
-                  className="h-9 rounded-lg border border-neutral-300 px-3 text-xs font-medium text-neutral-800"
+                  className="h-9 rounded-lg bg-neutral-900 text-sm font-semibold text-white"
                 >
-                  {product.active ? "Set Inactive" : "Set Active"}
+                  Save
                 </button>
               </form>
+
+              <div className="mt-2 flex gap-2">
+                <form action={toggleProductStatusAction} className="flex-1">
+                  <input type="hidden" name="id" value={product.id} />
+                  <input
+                    type="hidden"
+                    name="nextActive"
+                    value={product.active ? "false" : "true"}
+                  />
+                  <button
+                    type="submit"
+                    className="h-9 w-full rounded-lg border border-neutral-300 text-xs font-semibold text-neutral-800"
+                  >
+                    {product.active ? "Set Inactive" : "Set Active"}
+                  </button>
+                </form>
+                <form action={deleteProductAction} className="flex-1">
+                  <input type="hidden" name="id" value={product.id} />
+                  <button
+                    type="submit"
+                    className="h-9 w-full rounded-lg border border-red-300 text-xs font-semibold text-red-600"
+                  >
+                    Delete
+                  </button>
+                </form>
+              </div>
             </article>
           ))
         ) : (
