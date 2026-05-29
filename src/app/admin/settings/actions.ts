@@ -23,15 +23,19 @@ export async function updateLanguageSettingsAction(
     ? defaultLang
     : enabled[0];
 
+  const supportChatUrl = String(formData.get("support_chat_url") ?? "").trim();
+
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.from("site_settings").upsert([
     { key: "enabled_languages", value: enabled as unknown as Json },
     { key: "default_language", value: def as unknown as Json },
+    { key: "support_chat_url", value: supportChatUrl as unknown as Json },
   ]);
 
   if (error) return { ok: false, message: `Failed to save: ${error.message}` };
 
   revalidatePath("/", "layout");
   revalidatePath("/admin/settings");
+  revalidatePath("/support");
   return { ok: true, message: "Settings saved." };
 }

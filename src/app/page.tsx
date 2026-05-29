@@ -64,7 +64,7 @@ export default async function Home({ searchParams }: HomePageProps) {
       />
 
       <div className="px-3 pt-3">
-        <StoreTopLinks t={t} />
+        <StoreTopLinks locale={locale} />
 
         <section className="relative mt-3 overflow-hidden rounded-xl border border-[var(--border)] bg-gradient-to-br from-[#2a0f24] via-[#1a0a18] to-black p-4">
           <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-[var(--accent)]/20 blur-2xl" />

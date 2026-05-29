@@ -279,6 +279,72 @@ export type Database = {
         };
         Relationships: [];
       };
+      quick_links: {
+        Row: {
+          id: string;
+          label_en: string;
+          label_zh: string | null;
+          url: string;
+          is_external: boolean;
+          sort_order: number;
+          active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          label_en: string;
+          label_zh?: string | null;
+          url: string;
+          is_external?: boolean;
+          sort_order?: number;
+          active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          label_en?: string;
+          label_zh?: string | null;
+          url?: string;
+          is_external?: boolean;
+          sort_order?: number;
+          active?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      faqs: {
+        Row: {
+          id: string;
+          question_en: string;
+          question_zh: string | null;
+          answer_en: string;
+          answer_zh: string | null;
+          sort_order: number;
+          active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          question_en: string;
+          question_zh?: string | null;
+          answer_en: string;
+          answer_zh?: string | null;
+          sort_order?: number;
+          active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          question_en?: string;
+          question_zh?: string | null;
+          answer_en?: string;
+          answer_zh?: string | null;
+          sort_order?: number;
+          active?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       site_settings: {
         Row: {
           key: string;

@@ -6,9 +6,6 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getTranslations } from "@/lib/i18n/server";
 import { pickLocalized } from "@/lib/i18n/config";
 
-const HUB_PRIMARY = "https://juhe.live";
-const HUB_BACKUP = "http://103.236.57.111:8090";
-
 function DownloadLink({
   href,
   label,
@@ -60,14 +57,6 @@ export default async function DownloadPage() {
       />
 
       <div className="space-y-4 px-3 pt-3">
-        <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-3">
-          <p className="text-xs text-[var(--muted)]">{t.officialHub}</p>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <DownloadLink href={HUB_PRIMARY} label={t.mainDownload} variant="primary" />
-            <DownloadLink href={HUB_BACKUP} label={t.backupAddress} variant="secondary" />
-          </div>
-        </section>
-
         <section>
           <h2 className="text-sm font-bold text-white">{t.boxApps}</h2>
           <p className="mt-0.5 text-xs text-[var(--muted)]">{t.boxAppsDesc}</p>

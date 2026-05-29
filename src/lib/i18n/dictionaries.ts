@@ -18,6 +18,14 @@ export type Dict = {
   navHome: string;
   navAccount: string;
   navQuery: string;
+  navFaq: string;
+  navService: string;
+  // faq + support
+  faqTitle: string;
+  faqSubtitle: string;
+  faqEmpty: string;
+  supportTitle: string;
+  supportUnavailable: string;
   // download page
   downloadTitle: string;
   downloadSubtitle: string;
@@ -103,15 +111,22 @@ const en: Dict = {
   navHome: "Home",
   navAccount: "Account",
   navQuery: "Track",
+  navFaq: "FAQ",
+  navService: "Support",
+  faqTitle: "FAQ",
+  faqSubtitle: "Common questions & answers",
+  faqEmpty: "No FAQs yet.",
+  supportTitle: "Online Support",
+  supportUnavailable: "Live chat is being set up. Please check back soon.",
   downloadTitle: "Downloads",
   downloadSubtitle: "Box apps · Streaming platforms",
   officialHub: "Official download hub",
   mainDownload: "Main site",
   backupAddress: "Backup address",
-  boxApps: "Aggregator Box Apps",
+  boxApps: "Box Apps",
   boxAppsDesc: "Matches the card products; activate with a card after install",
   streamingApps: "Streaming Apps",
-  streamingDesc: "From juhe.live; opens detail page when no direct link",
+  streamingDesc: "Opens the detail page when no direct link is available",
   buyCard: "Buy Card",
   detailPage: "Details",
   cloudBackup: "Cloud / Backup",
@@ -182,15 +197,22 @@ const zh: Dict = {
   navHome: "首页",
   navAccount: "我的",
   navQuery: "查单",
+  navFaq: "常见问题",
+  navService: "在线客服",
+  faqTitle: "常见问题",
+  faqSubtitle: "常见问题与解答",
+  faqEmpty: "暂无常见问题。",
+  supportTitle: "在线客服",
+  supportUnavailable: "在线客服正在接入，请稍后再试。",
   downloadTitle: "软件下载",
-  downloadSubtitle: "聚合盒子 · 直播平台",
-  officialHub: "官方聚合下载站",
+  downloadSubtitle: "盒子 App · 直播平台",
+  officialHub: "官方下载站",
   mainDownload: "主站下载",
   backupAddress: "备用地址",
-  boxApps: "聚合直播盒子",
+  boxApps: "直播盒子 App",
   boxAppsDesc: "与发卡商品对应，安装后在本站购买卡密激活",
   streamingApps: "直播平台 App",
-  streamingDesc: "来源 juhe.live，无直链时跳转详情页",
+  streamingDesc: "无直链时跳转详情页",
   buyCard: "购买卡密",
   detailPage: "详情页",
   cloudBackup: "网盘/备用",
