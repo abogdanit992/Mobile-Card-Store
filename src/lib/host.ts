@@ -63,6 +63,8 @@ export function adminExternalPath(internalPath: string): string {
     return internalPath;
   }
   const rest = internalPath.slice("/admin".length);
-  if (!rest || rest === "/login") return "/login";
+  if (rest === "/login") return "/login";
+  // The admin dashboard ("/admin") lives at the subdomain root.
+  if (!rest) return "/";
   return rest;
 }

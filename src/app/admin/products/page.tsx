@@ -189,8 +189,12 @@ export default async function AdminProductsPage() {
                 <ActionForm
                   action={toggleProductStatusAction}
                   className="flex-1"
-                  buttonClassName="h-9 w-full rounded-lg border border-neutral-300 text-xs font-semibold text-neutral-800"
-                  submitLabel={product.active ? "Set Inactive" : "Set Active"}
+                  buttonClassName={`h-9 w-full rounded-lg border text-xs font-semibold ${
+                    product.active
+                      ? "border-amber-300 text-amber-700"
+                      : "border-emerald-300 text-emerald-700"
+                  }`}
+                  submitLabel={product.active ? "Hide from store" : "Show on store"}
                   pendingLabel="…"
                 >
                   <input type="hidden" name="id" value={product.id} />

@@ -111,8 +111,12 @@ export default async function AdminCategoriesPage() {
               <ActionForm
                 action={toggleCategoryAction}
                 className="flex-1"
-                buttonClassName="h-9 w-full rounded-lg border border-neutral-300 text-xs font-semibold text-neutral-700"
-                submitLabel={c.active ? "Hide" : "Show"}
+                buttonClassName={`h-9 w-full rounded-lg border text-xs font-semibold ${
+                  c.active
+                    ? "border-amber-300 text-amber-700"
+                    : "border-emerald-300 text-emerald-700"
+                }`}
+                submitLabel={c.active ? "Hide from store" : "Show on store"}
                 pendingLabel="…"
               >
                 <input type="hidden" name="id" value={c.id} />
