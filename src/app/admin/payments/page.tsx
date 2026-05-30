@@ -24,6 +24,15 @@ const CONFIG_FIELDS: Record<string, { key: string; label: string; secret?: boole
     { key: "client_secret", label: "Client Secret", secret: true },
     { key: "mode", label: "Mode (sandbox | live)" },
   ],
+  direct_usdt: [
+    { key: "wallet_address", label: "TRC20 wallet address (T…)" },
+    { key: "tron_api_key", label: "TronGrid API key (optional)", secret: true },
+    {
+      key: "usdt_contract",
+      label: "USDT contract (default TRC20 mainnet)",
+    },
+    { key: "expire_minutes", label: "Order expiry (minutes, default 30)" },
+  ],
 };
 
 function getConfigValue(config: unknown, key: string): string {

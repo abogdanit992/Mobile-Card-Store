@@ -46,6 +46,10 @@ export default async function PaymentReturnPage({ searchParams }: ReturnPageProp
     redirect(`/cards?orderId=${orderId}`);
   }
 
+  if (payment?.provider === "direct_usdt") {
+    redirect(`/payment/usdt?orderId=${orderId}`);
+  }
+
   // PayPal: capture on return
   if (payment?.provider === "paypal" && payment.status !== "paid") {
     const paypalOrderId = token ?? payment.provider_payment_id ?? undefined;

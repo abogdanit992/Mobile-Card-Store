@@ -1,4 +1,9 @@
-export type Provider = "cryptomus" | "nowpayments" | "stripe" | "paypal";
+export type Provider =
+  | "cryptomus"
+  | "nowpayments"
+  | "stripe"
+  | "paypal"
+  | "direct_usdt";
 
 export type ChannelConfig = Record<string, string>;
 

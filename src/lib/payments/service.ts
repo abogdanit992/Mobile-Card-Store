@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import type { ChannelConfig, CreatePaymentParams, Provider } from "./types";
 import { createCryptomusPayment } from "./cryptomus";
+import { createDirectUsdtPayment } from "./direct-usdt";
 import { createNowPaymentsPayment } from "./nowpayments";
 import { createStripePayment } from "./stripe";
 import { createPaypalPayment } from "./paypal";
@@ -34,6 +35,8 @@ export async function createProviderPayment(params: CreatePaymentParams) {
       return createStripePayment(params);
     case "paypal":
       return createPaypalPayment(params);
+    case "direct_usdt":
+      return createDirectUsdtPayment(params);
     default:
       throw new Error("Unsupported provider.");
   }

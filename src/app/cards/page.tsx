@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatPrice } from "@/lib/format";
 import { MobileShell } from "@/components/mobile-shell";
+import { CardCodeDisplay } from "@/components/card-code-display";
 import { PrimaryButton } from "@/components/primary-button";
 import { StoreHeader } from "@/components/store-header";
 import { getTranslations } from "@/lib/i18n/server";
@@ -57,9 +58,14 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
             <p className="text-center text-[10px] font-black uppercase tracking-[0.2em] text-[var(--accent-soft)]">
               {t.yourVipCode}
             </p>
-            <p className="mt-4 break-all rounded-lg border border-[var(--border)] bg-black/60 p-4 text-center font-mono text-lg font-bold tracking-widest text-[var(--gold)]">
-              {card.code}
-            </p>
+            <CardCodeDisplay
+              code={card.code}
+              labels={{
+                copyCode: t.copyCode,
+                copied: t.copied,
+                tapToCopy: t.tapToCopy,
+              }}
+            />
             {order ? (
               <p className="mt-3 text-center text-xs text-[var(--muted)]">
                 {t.order} {order.id.slice(0, 8)}… · {formatPrice(order.amount)} · {order.status}

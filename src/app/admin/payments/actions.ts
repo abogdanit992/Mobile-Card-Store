@@ -14,6 +14,7 @@ const CONFIG_KEYS: Record<string, string[]> = {
   nowpayments: ["api_key", "ipn_secret"],
   stripe: ["secret_key", "webhook_secret"],
   paypal: ["client_id", "client_secret", "mode"],
+  direct_usdt: ["wallet_address", "tron_api_key", "usdt_contract", "expire_minutes"],
 };
 
 export async function updatePaymentChannelAction(

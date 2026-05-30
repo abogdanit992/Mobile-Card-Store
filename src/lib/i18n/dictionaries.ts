@@ -95,7 +95,24 @@ export type Dict = {
   order: string;
   cardNotAllocated: string;
   saveScreenshot: string;
+  copyCode: string;
+  copied: string;
+  tapToCopy: string;
   keepShopping: string;
+  // direct USDT
+  usdtPayTitle: string;
+  usdtPaySubtitle: string;
+  usdtNotConfigured: string;
+  usdtNetwork: string;
+  usdtSendExactly: string;
+  usdtDecimalWarning: string;
+  usdtWalletAddress: string;
+  usdtWaiting: string;
+  usdtWaitingHint: string;
+  usdtExpired: string;
+  usdtExpiredHint: string;
+  usdtImportant: string;
+  usdtImportantHint: string;
 };
 
 const en: Dict = {
@@ -184,8 +201,26 @@ const en: Dict = {
   yourVipCode: "Your VIP Code",
   order: "Order",
   cardNotAllocated: "No card allocated to this order yet",
-  saveScreenshot: "Screenshot it · keep private · activate in the app",
+  saveScreenshot: "Keep private · activate in the app",
+  copyCode: "Copy code",
+  copied: "Copied!",
+  tapToCopy: "Tap the code or button to copy",
   keepShopping: "Keep shopping",
+  usdtPayTitle: "Pay with USDT",
+  usdtPaySubtitle: "TRC20 · exact amount required",
+  usdtNotConfigured: "USDT direct payment is not configured.",
+  usdtNetwork: "USDT · TRC20",
+  usdtSendExactly: "Send exactly this amount",
+  usdtDecimalWarning:
+    "Amount must match exactly — all 6 digits after the decimal (e.g. 12.037412). Rounding or sending 12.00 / 12.04 will NOT auto-deliver your card.",
+  usdtWalletAddress: "Receiving address (TRC20)",
+  usdtWaiting: "Waiting for payment…",
+  usdtWaitingHint: "Card is delivered automatically after on-chain confirmation (usually 1–3 min).",
+  usdtExpired: "Payment window expired",
+  usdtExpiredHint: "Please place a new order. Do not send to this amount anymore.",
+  usdtImportant: "Important",
+  usdtImportantHint:
+    "Use TRC20 network only. Tap the amount above to copy — paste it as-is in your wallet. Wrong network, wrong amount, or edited decimals may fail auto delivery. Contact support with your tx hash if needed.",
 };
 
 const zh: Dict = {
@@ -274,8 +309,26 @@ const zh: Dict = {
   yourVipCode: "您的卡密",
   order: "订单",
   cardNotAllocated: "该订单尚未分配卡密",
-  saveScreenshot: "截图保存 · 勿泄露 · 复制后到 App 内激活",
+  saveScreenshot: "请勿外泄 · 复制后到 App 内激活",
+  copyCode: "复制卡密",
+  copied: "已复制",
+  tapToCopy: "点击卡密或下方按钮即可复制",
   keepShopping: "继续逛逛",
+  usdtPayTitle: "USDT 支付",
+  usdtPaySubtitle: "TRC20 网络 · 金额必须完全一致",
+  usdtNotConfigured: "USDT 直连支付尚未配置。",
+  usdtNetwork: "USDT · TRC20",
+  usdtSendExactly: "请转入以下精确金额",
+  usdtDecimalWarning:
+    "金额必须完全一致，含小数点后 6 位（如 12.037412）。四舍五入、只转整数或 12.04 等均无法自动发卡。",
+  usdtWalletAddress: "收款地址（TRC20）",
+  usdtWaiting: "等待链上到账…",
+  usdtWaitingHint: "确认到账后自动发卡（通常 1–3 分钟）。",
+  usdtExpired: "支付已超时",
+  usdtExpiredHint: "请重新下单，请勿再向该金额转账。",
+  usdtImportant: "注意事项",
+  usdtImportantHint:
+    "务必选择 TRC20 网络。建议点击上方金额一键复制，原样粘贴到钱包，勿改小数位。网络或金额错误将无法自动发卡，请联系客服并提供交易哈希。",
 };
 
 const dictionaries: Record<Locale, Dict> = { en, zh };

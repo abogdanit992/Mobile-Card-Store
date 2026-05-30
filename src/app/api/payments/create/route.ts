@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
+import { randomUUID } from "crypto";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import {
+  computeExactPayAmount,
+  orderExpiresAt,
+  parseExpireMinutes,
+} from "@/lib/payments/direct-usdt";
 import {
   createProviderPayment,
   getEnabledChannelConfig,
@@ -24,7 +30,8 @@ function isProvider(value: unknown): value is Provider {
     value === "cryptomus" ||
     value === "nowpayments" ||
     value === "stripe" ||
-    value === "paypal"
+    value === "paypal" ||
+    value === "direct_usdt"
   );
 }
 
@@ -89,17 +96,29 @@ export async function POST(request: Request) {
     );
   }
 
-  // Create pending order
+  // Create pending order (pre-generate id for direct_usdt exact amount)
+  const orderId = randomUUID();
+  const isDirectUsdt = provider === "direct_usdt";
+  const payAmountExact = isDirectUsdt
+    ? computeExactPayAmount(Number(product.price), orderId)
+    : null;
+  const expiresAt = isDirectUsdt
+    ? orderExpiresAt(parseExpireMinutes(config))
+    : null;
+
   const { data: order, error: orderError } = await admin
     .from("orders")
     .insert([
       {
+        id: orderId,
         product_id: product.id,
         amount: product.price,
         status: "pending",
         user_id: user?.id ?? null,
         contact_email: contactEmail ?? null,
         contact_phone: contactPhone ?? null,
+        pay_amount_exact: payAmountExact,
+        expires_at: expiresAt,
       },
     ])
     .select("id")
