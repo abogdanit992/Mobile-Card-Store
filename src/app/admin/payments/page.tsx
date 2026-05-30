@@ -96,12 +96,18 @@ export default async function AdminPaymentsPage() {
                   {t.enabled}
                 </label>
               </div>
+              <label className="mb-1 block text-xs font-semibold text-neutral-700">
+                {t.labelEn}
+              </label>
               <input
                 name="label_en"
                 defaultValue={ch.label_en}
                 placeholder={t.labelEn}
                 className={inputClass}
               />
+              <label className="mb-1 block text-xs font-semibold text-neutral-700">
+                {t.labelZh}
+              </label>
               <input
                 name="label_zh"
                 defaultValue={ch.label_zh ?? ""}
@@ -109,16 +115,23 @@ export default async function AdminPaymentsPage() {
                 className={inputClass}
               />
               {fields.map((f) => (
-                <input
-                  key={f.key}
-                  name={`config_${f.key}`}
-                  type={f.secret ? "password" : "text"}
-                  defaultValue={getConfigValue(ch.config, f.key)}
-                  placeholder={f.label}
-                  autoComplete="off"
-                  className={inputClass}
-                />
+                <div key={f.key}>
+                  <label className="mb-1 block text-xs font-semibold text-neutral-700">
+                    {f.label}
+                  </label>
+                  <input
+                    name={`config_${f.key}`}
+                    type={f.secret ? "password" : "text"}
+                    defaultValue={getConfigValue(ch.config, f.key)}
+                    placeholder={f.label}
+                    autoComplete="off"
+                    className={inputClass}
+                  />
+                </div>
               ))}
+              <label className="mb-1 block text-xs font-semibold text-neutral-700">
+                {t.sortOrder}
+              </label>
               <input
                 name="sort_order"
                 type="number"
