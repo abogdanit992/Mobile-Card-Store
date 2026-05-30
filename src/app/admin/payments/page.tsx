@@ -12,6 +12,10 @@ const CONFIG_FIELDS: Record<string, { key: string; label: string; secret?: boole
     { key: "merchant_id", label: "Merchant ID" },
     { key: "payment_api_key", label: "Payment API Key", secret: true },
   ],
+  nowpayments: [
+    { key: "api_key", label: "API Key", secret: true },
+    { key: "ipn_secret", label: "IPN Secret Key", secret: true },
+  ],
   stripe: [
     { key: "secret_key", label: "Secret Key (sk_...)", secret: true },
     { key: "webhook_secret", label: "Webhook Secret (whsec_...)", secret: true },

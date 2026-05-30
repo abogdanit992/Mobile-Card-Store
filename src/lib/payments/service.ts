@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import type { ChannelConfig, CreatePaymentParams, Provider } from "./types";
 import { createCryptomusPayment } from "./cryptomus";
+import { createNowPaymentsPayment } from "./nowpayments";
 import { createStripePayment } from "./stripe";
 import { createPaypalPayment } from "./paypal";
 import { sendCardEmail } from "@/lib/email/send";
@@ -27,6 +28,8 @@ export async function createProviderPayment(params: CreatePaymentParams) {
   switch (params.provider) {
     case "cryptomus":
       return createCryptomusPayment(params);
+    case "nowpayments":
+      return createNowPaymentsPayment(params);
     case "stripe":
       return createStripePayment(params);
     case "paypal":

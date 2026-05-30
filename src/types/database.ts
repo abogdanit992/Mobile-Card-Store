@@ -177,7 +177,7 @@ export type Database = {
       payment_channels: {
         Row: {
           id: string;
-          provider: "cryptomus" | "stripe" | "paypal";
+          provider: "cryptomus" | "nowpayments" | "stripe" | "paypal";
           label_en: string;
           label_zh: string | null;
           enabled: boolean;
@@ -187,7 +187,7 @@ export type Database = {
         };
         Insert: {
           id?: string;
-          provider: "cryptomus" | "stripe" | "paypal";
+          provider: "cryptomus" | "nowpayments" | "stripe" | "paypal";
           label_en: string;
           label_zh?: string | null;
           enabled?: boolean;
@@ -197,7 +197,7 @@ export type Database = {
         };
         Update: {
           id?: string;
-          provider?: "cryptomus" | "stripe" | "paypal";
+          provider?: "cryptomus" | "nowpayments" | "stripe" | "paypal";
           label_en?: string;
           label_zh?: string | null;
           enabled?: boolean;
@@ -431,7 +431,7 @@ export type Database = {
       payment_channels_public: {
         Row: {
           id: string;
-          provider: "cryptomus" | "stripe" | "paypal";
+          provider: "cryptomus" | "nowpayments" | "stripe" | "paypal";
           label_en: string;
           label_zh: string | null;
           enabled: boolean;

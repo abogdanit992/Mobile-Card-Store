@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { PrimaryButton } from "@/components/primary-button";
 
-type Provider = "cryptomus" | "stripe" | "paypal";
+type Provider = "cryptomus" | "nowpayments" | "stripe" | "paypal";
 
 type ChannelOption = {
   provider: Provider;
@@ -38,6 +38,7 @@ type CheckoutFormProps = {
 
 const PROVIDER_ICON: Record<Provider, string> = {
   cryptomus: "₿",
+  nowpayments: "🪙",
   stripe: "💳",
   paypal: "🅿️",
 };

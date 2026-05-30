@@ -1,4 +1,4 @@
-export type Provider = "cryptomus" | "stripe" | "paypal";
+export type Provider = "cryptomus" | "nowpayments" | "stripe" | "paypal";
 
 export type ChannelConfig = Record<string, string>;
 

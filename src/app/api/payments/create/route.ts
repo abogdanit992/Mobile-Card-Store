@@ -20,7 +20,12 @@ function isValidEmail(email: string) {
 }
 
 function isProvider(value: unknown): value is Provider {
-  return value === "cryptomus" || value === "stripe" || value === "paypal";
+  return (
+    value === "cryptomus" ||
+    value === "nowpayments" ||
+    value === "stripe" ||
+    value === "paypal"
+  );
 }
 
 async function getOrigin() {
