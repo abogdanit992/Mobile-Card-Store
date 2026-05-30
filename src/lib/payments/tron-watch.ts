@@ -1,11 +1,18 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { DEFAULT_USDT_TRC20_CONTRACT } from "./direct-usdt";
+import {
+  isUsdtTransfer,
+  isValidTronBase58Address,
+  microToUsdtAmount,
+  resolveUsdtContract,
+  usdtToMicro,
+} from "./tron-utils";
 import { fulfillPaidOrder } from "./service";
 
 const TRONGRID_BASE = "https://api.trongrid.io";
 
 export type Trc20Transfer = {
   txId: string;
+  amountMicro: string;
   amount: number;
   to: string;
   blockTimestamp: number;
@@ -13,7 +20,7 @@ export type Trc20Transfer = {
 
 type TronGridTrc20Item = {
   transaction_id?: string;
-  token_info?: { address?: string; decimals?: number };
+  token_info?: { symbol?: string; address?: string; decimals?: number };
   block_timestamp?: number;
   from?: string;
   to?: string;
@@ -21,7 +28,7 @@ type TronGridTrc20Item = {
   type?: string;
 };
 
-/** Fetch recent incoming USDT-TRC20 transfers to `walletAddress`. */
+/** Fetch recent incoming USDT-TRC20 transfers (no contract_address filter — TronGrid rejects it). */
 export async function fetchIncomingUsdtTransfers(
   walletAddress: string,
   options: {
@@ -31,15 +38,19 @@ export async function fetchIncomingUsdtTransfers(
     limit?: number;
   } = {},
 ): Promise<Trc20Transfer[]> {
-  const contract = options.contractAddress ?? DEFAULT_USDT_TRC20_CONTRACT;
-  const limit = options.limit ?? 50;
+  if (!isValidTronBase58Address(walletAddress)) {
+    throw new Error(`Invalid TRON wallet address: ${walletAddress}`);
+  }
+
+  const contractFilter = resolveUsdtContract(options.contractAddress);
+  const limit = Math.min(options.limit ?? 50, 200);
   const url = new URL(
-    `/v1/accounts/${walletAddress}/transactions/trc20`,
+    `/v1/accounts/${walletAddress.trim()}/transactions/trc20`,
     TRONGRID_BASE,
   );
   url.searchParams.set("limit", String(limit));
-  url.searchParams.set("contract_address", contract);
   url.searchParams.set("only_to", "true");
+  url.searchParams.set("only_confirmed", "true");
   if (options.minTimestampMs) {
     url.searchParams.set("min_timestamp", String(options.minTimestampMs));
   }
@@ -60,17 +71,20 @@ export async function fetchIncomingUsdtTransfers(
 
   for (const item of json.data ?? []) {
     if (item.type && item.type !== "Transfer") continue;
+    if (!isUsdtTransfer(item.token_info, contractFilter)) continue;
+
     const to = item.to ?? "";
-    if (to.toLowerCase() !== walletAddress.toLowerCase()) continue;
+    if (to.toLowerCase() !== walletAddress.trim().toLowerCase()) continue;
 
     const decimals = item.token_info?.decimals ?? 6;
     const raw = item.value ?? "0";
-    const amount = Number(raw) / 10 ** decimals;
+    const amount = microToUsdtAmount(Number(raw) / 10 ** decimals);
     if (!item.transaction_id || amount <= 0) continue;
 
     out.push({
       txId: item.transaction_id,
-      amount: Number(amount.toFixed(6)),
+      amountMicro: usdtToMicro(amount),
+      amount,
       to,
       blockTimestamp: item.block_timestamp ?? 0,
     });
@@ -79,39 +93,39 @@ export async function fetchIncomingUsdtTransfers(
   return out;
 }
 
-/** Mark expired pending direct_usdt orders as cancelled. */
 export async function expireStaleOrders() {
   const admin = createSupabaseAdminClient();
   const now = new Date().toISOString();
 
-  const { data: expired } = await admin
+  const { data: expiredOrders } = await admin
     .from("orders")
     .select("id")
     .eq("status", "pending")
     .not("expires_at", "is", null)
     .lt("expires_at", now);
 
-  if (!expired?.length) return 0;
+  if (!expiredOrders?.length) return 0;
 
-  for (const order of expired) {
+  for (const order of expiredOrders) {
     await admin.from("orders").update({ status: "cancelled" }).eq("id", order.id);
-    await admin
-      .from("payments")
-      .update({ status: "expired", updated_at: now })
-      .eq("order_id", order.id)
-      .eq("status", "pending");
   }
 
-  return expired.length;
+  return expiredOrders.length;
 }
 
-/**
- * Poll TronGrid and fulfill matching pending direct_usdt orders.
- * Returns count of newly fulfilled orders.
- */
+type PendingOrderRow = {
+  id: string;
+  pay_amount_exact: number | null;
+  created_at: string;
+  expires_at: string | null;
+  status: string;
+};
+
 export async function processDirectUsdtPayments(): Promise<{
   fulfilled: number;
   expired: number;
+  scanned?: number;
+  pending?: number;
   error?: string;
 }> {
   const admin = createSupabaseAdminClient();
@@ -129,36 +143,56 @@ export async function processDirectUsdtPayments(): Promise<{
   }
 
   const config = (channel.config ?? {}) as Record<string, string>;
-  const walletAddress = config.wallet_address?.trim();
+  const walletAddress = config.wallet_address?.trim() ?? "";
   if (!walletAddress) {
     return { fulfilled: 0, expired, error: "wallet_address missing" };
   }
+  if (!isValidTronBase58Address(walletAddress)) {
+    return {
+      fulfilled: 0,
+      expired,
+      error: `wallet_address invalid (must be T… base58): ${walletAddress}`,
+    };
+  }
 
-  const contractAddress =
-    config.usdt_contract?.trim() || DEFAULT_USDT_TRC20_CONTRACT;
+  const contractAddress = resolveUsdtContract(config.usdt_contract);
   const apiKey = config.tron_api_key?.trim() || undefined;
+
+  const { data: pendingPayments } = await admin
+    .from("payments")
+    .select("order_id")
+    .eq("provider", "direct_usdt")
+    .in("status", ["pending", "expired"]);
+
+  const orderIds = (pendingPayments ?? [])
+    .map((p) => p.order_id)
+    .filter((id): id is string => Boolean(id));
+  if (!orderIds.length) {
+    return { fulfilled: 0, expired, pending: 0 };
+  }
 
   const { data: pendingOrders } = await admin
     .from("orders")
-    .select("id,pay_amount_exact,created_at,expires_at")
-    .eq("status", "pending")
-    .not("pay_amount_exact", "is", null)
-    .order("created_at", { ascending: true });
+    .select("id,pay_amount_exact,created_at,expires_at,status")
+    .in("id", orderIds)
+    .not("pay_amount_exact", "is", null);
 
   if (!pendingOrders?.length) {
-    return { fulfilled: 0, expired };
+    return { fulfilled: 0, expired, pending: 0 };
   }
 
   const now = Date.now();
-  const activeOrders = pendingOrders.filter(
-    (o) => !o.expires_at || new Date(o.expires_at).getTime() > now,
-  );
-  if (!activeOrders.length) {
-    return { fulfilled: 0, expired };
+  const matchableOrders = pendingOrders.filter((o) => {
+    if (!o.expires_at) return true;
+    return new Date(o.expires_at).getTime() + 2 * 60 * 60_000 > now;
+  });
+
+  if (!matchableOrders.length) {
+    return { fulfilled: 0, expired, pending: pendingOrders.length };
   }
 
   const minTs = Math.min(
-    ...activeOrders.map((o) => new Date(o.created_at).getTime() - 60_000),
+    ...matchableOrders.map((o) => new Date(o.created_at).getTime() - 120_000),
   );
 
   let transfers: Trc20Transfer[];
@@ -167,18 +201,15 @@ export async function processDirectUsdtPayments(): Promise<{
       contractAddress,
       apiKey,
       minTimestampMs: minTs,
-      limit: 100,
+      limit: 200,
     });
   } catch (err) {
     return {
       fulfilled: 0,
       expired,
+      pending: pendingOrders.length,
       error: err instanceof Error ? err.message : "TronGrid fetch failed",
     };
-  }
-
-  if (!transfers.length) {
-    return { fulfilled: 0, expired };
   }
 
   const { data: usedTxRows } = await admin
@@ -193,10 +224,10 @@ export async function processDirectUsdtPayments(): Promise<{
       .filter((id): id is string => Boolean(id)),
   );
 
-  const amountToOrder = new Map<number, string>();
-  for (const order of activeOrders) {
+  const amountToOrder = new Map<string, string>();
+  for (const order of matchableOrders) {
     if (order.pay_amount_exact != null) {
-      amountToOrder.set(Number(order.pay_amount_exact), order.id);
+      amountToOrder.set(usdtToMicro(order.pay_amount_exact), order.id);
     }
   }
 
@@ -205,7 +236,7 @@ export async function processDirectUsdtPayments(): Promise<{
   for (const tx of transfers) {
     if (usedTx.has(tx.txId)) continue;
 
-    const orderId = amountToOrder.get(tx.amount);
+    const orderId = amountToOrder.get(tx.amountMicro);
     if (!orderId) continue;
 
     const { data: payment } = await admin
@@ -230,9 +261,14 @@ export async function processDirectUsdtPayments(): Promise<{
     if (result.ok) {
       fulfilled += 1;
       usedTx.add(tx.txId);
-      amountToOrder.delete(tx.amount);
+      amountToOrder.delete(tx.amountMicro);
     }
   }
 
-  return { fulfilled, expired };
+  return {
+    fulfilled,
+    expired,
+    scanned: transfers.length,
+    pending: pendingOrders.length,
+  };
 }

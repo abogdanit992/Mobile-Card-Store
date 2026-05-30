@@ -29,7 +29,7 @@ const CONFIG_FIELDS: Record<string, { key: string; label: string; secret?: boole
     { key: "tron_api_key", label: "TronGrid API key (optional)", secret: true },
     {
       key: "usdt_contract",
-      label: "USDT contract (default TRC20 mainnet)",
+      label: "USDT contract (leave empty = official TRC20 USDT)",
     },
     { key: "expire_minutes", label: "Order expiry (minutes, default 30)" },
   ],

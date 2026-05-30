@@ -1,8 +1,8 @@
 import type { CreatePaymentParams, CreatePaymentResult } from "./types";
-
-/** Official USDT TRC20 contract on TRON mainnet. */
-export const DEFAULT_USDT_TRC20_CONTRACT =
-  "TR7NHqjeKQxGTCi8q8ZYs4L8WvaBtxL8t4";
+export {
+  USDT_TRC20_CONTRACT,
+  USDT_TRC20_CONTRACT as DEFAULT_USDT_TRC20_CONTRACT,
+} from "./tron-utils";
 
 const DEFAULT_EXPIRE_MINUTES = 30;
 
