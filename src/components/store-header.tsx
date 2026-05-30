@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -15,7 +16,7 @@ export function StoreHeader({
   subtitle,
   backHref,
   backLabel = "返回",
-  brand = "VIP Lounge",
+  brand = "vkeyshop",
   rightSlot,
 }: StoreHeaderProps) {
   return (
@@ -30,9 +31,16 @@ export function StoreHeader({
               <span aria-hidden>←</span> {backLabel}
             </Link>
           ) : (
-            <p className="text-glow text-[10px] font-black uppercase tracking-[0.25em] text-[var(--accent-soft)]">
-              {brand}
-            </p>
+            <Link href="/" className="mb-1 inline-flex" aria-label={brand}>
+              <Image
+                src="/brand/logo.png"
+                alt={brand}
+                width={1450}
+                height={500}
+                priority
+                className="h-7 w-auto mix-blend-screen"
+              />
+            </Link>
           )}
           <h1 className="text-lg font-bold text-white">{title}</h1>
           {subtitle ? (

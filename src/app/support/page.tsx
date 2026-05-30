@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { MobileShell } from "@/components/mobile-shell";
 import { StoreHeader } from "@/components/store-header";
@@ -28,6 +29,15 @@ export default async function SupportPage() {
         backLabel={t.backHome}
       />
       <div className="px-3 pt-6">
+        <div className="mb-5 flex justify-center">
+          <Image
+            src="/brand/support.png"
+            alt={t.supportTitle}
+            width={512}
+            height={512}
+            className="h-28 w-28 drop-shadow-[0_0_24px_rgba(255,30,86,0.35)]"
+          />
+        </div>
         {hasAnyChannel ? (
           <SupportLauncher
             fallbackHref="/support"
