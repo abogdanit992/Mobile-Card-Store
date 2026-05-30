@@ -40,38 +40,36 @@ export async function bulkImportCardsAction(
 
   const supabase = await createSupabaseServerClient();
 
-  // Skip codes that already exist (avoids the whole batch failing on a dupe).
-  const { data: existingRows, error: existingError } = await supabase
-    .from("cards")
-    .select("code")
-    .in("code", codes);
-  if (existingError) {
-    return { ok: false, message: `Failed to check existing: ${existingError.message}` };
+  // `cards.code` is UNIQUE — upsert with ignoreDuplicates skips codes that
+  // already exist. Insert in chunks so large files don't hit request limits.
+  const CHUNK = 500;
+  let imported = 0;
+  for (let i = 0; i < codes.length; i += CHUNK) {
+    const batch: Database["public"]["Tables"]["cards"]["Insert"][] = codes
+      .slice(i, i + CHUNK)
+      .map((code) => ({ product_id: productId, code, used: false }));
+
+    const { data, error } = await supabase
+      .from("cards")
+      .upsert(batch, { onConflict: "code", ignoreDuplicates: true })
+      .select("id");
+    if (error) return { ok: false, message: `Import failed: ${error.message}` };
+
+    imported += data?.length ?? 0;
   }
-
-  const existing = new Set((existingRows ?? []).map((r) => r.code));
-  const fresh = codes.filter((code) => !existing.has(code));
-
-  if (fresh.length === 0) {
-    return {
-      ok: false,
-      message: `All ${codes.length} codes already exist. Nothing imported.`,
-    };
-  }
-
-  const payload: Database["public"]["Tables"]["cards"]["Insert"][] = fresh.map(
-    (code) => ({ product_id: productId, code, used: false }),
-  );
-
-  const { error } = await supabase.from("cards").insert(payload);
-  if (error) return { ok: false, message: `Import failed: ${error.message}` };
 
   revalidatePath("/admin/cards");
 
-  const skipped = codes.length - fresh.length;
+  const skipped = codes.length - imported;
+  if (imported === 0) {
+    return {
+      ok: false,
+      message: `All ${codes.length} code(s) already exist. Nothing imported.`,
+    };
+  }
   return {
     ok: true,
-    message: `Imported ${fresh.length} card(s).${
+    message: `Imported ${imported} card(s).${
       skipped > 0 ? ` Skipped ${skipped} duplicate(s).` : ""
     }`,
   };
