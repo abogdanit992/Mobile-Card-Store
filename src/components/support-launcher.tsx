@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -101,6 +102,15 @@ export function SupportLauncher({
             className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[#140b1d] p-4 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
+            <div className="mb-2 flex justify-center">
+              <Image
+                src="/brand/support.png"
+                alt={labels.title}
+                width={512}
+                height={512}
+                className="h-16 w-16 drop-shadow-[0_0_18px_rgba(255,30,86,0.4)]"
+              />
+            </div>
             <p className="mb-3 text-center text-sm font-bold text-white">
               {labels.title}
             </p>
