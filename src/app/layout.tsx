@@ -15,6 +15,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "VIP Lounge · 会员发卡",
   description: "私密会员卡密 · 即时自动交付",
+  icons: {
+    icon: [{ url: "/brand/favicon.png?v=2", type: "image/png" }],
+    shortcut: ["/brand/favicon.png?v=2"],
+    apple: [{ url: "/brand/favicon.png?v=2" }],
+  },
 };
 
 export default function RootLayout({
