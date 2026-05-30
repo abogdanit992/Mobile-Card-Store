@@ -41,6 +41,7 @@ export async function createProductAction(
     description_zh: read(formData, "description_zh") || null,
     cover: coverUrl,
     category_id: categoryId || null,
+    card_type: read(formData, "card_type") || null,
     price: priceRaw,
     active: true,
   };
@@ -85,6 +86,7 @@ export async function updateProductAction(
     description_zh: read(formData, "description_zh") || null,
     cover: coverUrl,
     category_id: categoryId || null,
+    card_type: read(formData, "card_type") || null,
     price: priceRaw,
   };
 

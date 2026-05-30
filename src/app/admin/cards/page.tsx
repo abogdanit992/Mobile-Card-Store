@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { adminHref } from "@/lib/admin-url";
 import { ActionForm } from "@/components/admin/action-form";
+import { CARD_TYPES } from "@/lib/card-types";
 import {
   bulkImportCardsAction,
   clearCardsAction,
@@ -9,21 +10,60 @@ import {
   deleteCardAction,
 } from "./actions";
 
+const selectClass = "h-10 w-full rounded-lg border border-neutral-300 px-3 text-sm";
+
+function PlatformSelect({ categories }: { categories: { id: string; name_en: string }[] }) {
+  return (
+    <select name="categoryId" required defaultValue="" className={selectClass}>
+      <option value="" disabled>
+        Select platform
+      </option>
+      {categories.map((c) => (
+        <option key={c.id} value={c.id}>
+          {c.name_en}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function CardTypeSelect() {
+  return (
+    <select name="cardType" required defaultValue="" className={selectClass}>
+      <option value="" disabled>
+        Select card type
+      </option>
+      {CARD_TYPES.map((t) => (
+        <option key={t.value} value={t.value}>
+          {t.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 export default async function AdminCardsPage() {
   const backHref = await adminHref("/admin");
   const supabase = await createSupabaseServerClient();
 
-  const [{ data: products }, { data: cards, error }] = await Promise.all([
-    supabase
-      .from("products")
-      .select("id,title,active")
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("cards")
-      .select("id,product_id,code,used,created_at")
-      .order("created_at", { ascending: false })
-      .limit(100),
-  ]);
+  const [{ data: products }, { data: categories }, { data: cards, error }] =
+    await Promise.all([
+      supabase
+        .from("products")
+        .select("id,title,active")
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("categories")
+        .select("id,name_en")
+        .order("sort_order", { ascending: true }),
+      supabase
+        .from("cards")
+        .select("id,product_id,code,used,created_at")
+        .order("created_at", { ascending: false })
+        .limit(100),
+    ]);
+
+  const cats = categories ?? [];
 
   const total = cards?.length ?? 0;
   const available = cards?.filter((item) => !item.used).length ?? 0;
@@ -102,21 +142,8 @@ export default async function AdminCardsPage() {
           submitLabel="Import cards"
           pendingLabel="Importing…"
         >
-          <select
-            name="productId"
-            required
-            className="h-10 rounded-lg border border-neutral-300 px-3 text-sm"
-            defaultValue=""
-          >
-            <option value="" disabled>
-              Select product
-            </option>
-            {products?.map((product) => (
-              <option key={product.id} value={product.id}>
-                {product.title} {product.active ? "" : "(inactive)"}
-              </option>
-            ))}
-          </select>
+          <PlatformSelect categories={cats} />
+          <CardTypeSelect />
           <input
             name="file"
             type="file"
@@ -135,21 +162,8 @@ export default async function AdminCardsPage() {
       <section className="mt-4 rounded-2xl border border-neutral-200 bg-white p-4">
         <h2 className="text-sm font-medium text-neutral-900">Add single card</h2>
         <form action={createCardAction} className="mt-3 grid gap-2">
-          <select
-            name="productId"
-            required
-            className="h-10 rounded-lg border border-neutral-300 px-3 text-sm"
-            defaultValue=""
-          >
-            <option value="" disabled>
-              Select product
-            </option>
-            {products?.map((product) => (
-              <option key={product.id} value={product.id}>
-                {product.title} {product.active ? "" : "(inactive)"}
-              </option>
-            ))}
-          </select>
+          <PlatformSelect categories={cats} />
+          <CardTypeSelect />
           <input
             name="code"
             type="text"

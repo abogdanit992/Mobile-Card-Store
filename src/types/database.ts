@@ -61,6 +61,7 @@ export type Database = {
           cover: string | null;
           category_sort: string | null;
           category_id: string | null;
+          card_type: string | null;
           active: boolean;
           created_at: string;
         };
@@ -76,6 +77,7 @@ export type Database = {
           cover?: string | null;
           category_sort?: string | null;
           category_id?: string | null;
+          card_type?: string | null;
           active?: boolean;
           created_at?: string;
         };
@@ -91,6 +93,7 @@ export type Database = {
           cover?: string | null;
           category_sort?: string | null;
           category_id?: string | null;
+          card_type?: string | null;
           active?: boolean;
           created_at?: string;
         };

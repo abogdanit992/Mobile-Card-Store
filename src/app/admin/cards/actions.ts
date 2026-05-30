@@ -5,6 +5,35 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
 import type { ActionResult } from "@/lib/admin/action-result";
 
+type SupabaseServer = Awaited<ReturnType<typeof createSupabaseServerClient>>;
+
+/** Resolve a product from the selected platform (category) + card type. */
+async function resolveProductId(
+  supabase: SupabaseServer,
+  categoryId: string,
+  cardType: string,
+): Promise<{ id?: string; error?: string }> {
+  if (!categoryId) return { error: "Please select a platform." };
+  if (!cardType) return { error: "Please select a card type." };
+
+  const { data, error } = await supabase
+    .from("products")
+    .select("id")
+    .eq("category_id", categoryId)
+    .eq("card_type", cardType)
+    .order("active", { ascending: false })
+    .limit(1);
+
+  if (error) return { error: error.message };
+  if (!data || data.length === 0) {
+    return {
+      error:
+        "No product matches this platform + card type. Set the platform and card type on the product under Products first.",
+    };
+  }
+  return { id: data[0].id };
+}
+
 /** Split a blob of text into clean, de-duplicated card codes. */
 function parseCodes(raw: string): { codes: string[]; duplicates: number } {
   const seen = new Set<string>();
@@ -27,8 +56,16 @@ export async function bulkImportCardsAction(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
-  const productId = String(formData.get("productId") ?? "").trim();
-  if (!productId) return { ok: false, message: "Please select a product first." };
+  const supabaseForResolve = await createSupabaseServerClient();
+  const resolved = await resolveProductId(
+    supabaseForResolve,
+    String(formData.get("categoryId") ?? "").trim(),
+    String(formData.get("cardType") ?? "").trim(),
+  );
+  if (resolved.error || !resolved.id) {
+    return { ok: false, message: resolved.error ?? "Could not resolve product." };
+  }
+  const productId = resolved.id;
 
   const pasted = String(formData.get("codes") ?? "");
   const file = formData.get("file");
@@ -42,7 +79,7 @@ export async function bulkImportCardsAction(
     return { ok: false, message: "No card codes found. Paste codes or upload a .txt file." };
   }
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = supabaseForResolve;
 
   // `cards.code` is UNIQUE — upsert with ignoreDuplicates skips codes that
   // already exist. Insert in chunks so large files don't hit request limits.
@@ -83,17 +120,22 @@ export async function bulkImportCardsAction(
 }
 
 export async function createCardAction(formData: FormData) {
-  const productId = String(formData.get("productId") ?? "").trim();
   const code = String(formData.get("code") ?? "").trim();
-
-  if (!productId || !code) {
-    throw new Error("Missing productId or code.");
-  }
+  if (!code) throw new Error("Missing card code.");
 
   const supabase = await createSupabaseServerClient();
+  const resolved = await resolveProductId(
+    supabase,
+    String(formData.get("categoryId") ?? "").trim(),
+    String(formData.get("cardType") ?? "").trim(),
+  );
+  if (resolved.error || !resolved.id) {
+    throw new Error(resolved.error ?? "Could not resolve product.");
+  }
+
   const payload = [
     {
-      product_id: productId,
+      product_id: resolved.id,
       code,
       used: false,
     } satisfies Database["public"]["Tables"]["cards"]["Insert"],

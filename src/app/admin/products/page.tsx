@@ -2,12 +2,26 @@ import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { adminHref } from "@/lib/admin-url";
 import { ActionForm } from "@/components/admin/action-form";
+import { CARD_TYPES } from "@/lib/card-types";
 import {
   createProductAction,
   deleteProductAction,
   toggleProductStatusAction,
   updateProductAction,
 } from "./actions";
+
+function CardTypeSelect({ value }: { value?: string | null }) {
+  return (
+    <select name="card_type" defaultValue={value ?? ""} className={inputClass}>
+      <option value="">— Card type —</option>
+      {CARD_TYPES.map((t) => (
+        <option key={t.value} value={t.value}>
+          {t.label}
+        </option>
+      ))}
+    </select>
+  );
+}
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat("en-US", {
@@ -53,7 +67,7 @@ export default async function AdminProductsPage() {
     supabase
       .from("products")
       .select(
-        "id,title,name_en,name_zh,description_en,description_zh,price,cover,category_id,active,created_at",
+        "id,title,name_en,name_zh,description_en,description_zh,price,cover,category_id,card_type,active,created_at",
       )
       .order("created_at", { ascending: false }),
   ]);
@@ -93,6 +107,7 @@ export default async function AdminProductsPage() {
             className={inputClass}
           />
           <CategorySelect categories={cats} />
+          <CardTypeSelect />
           <input name="cover" placeholder="Cover URL (optional)" className={inputClass} />
           <label className="text-xs font-medium text-neutral-600">
             Or upload cover image
@@ -172,6 +187,7 @@ export default async function AdminProductsPage() {
                   className={inputClass}
                 />
                 <CategorySelect categories={cats} value={product.category_id} />
+                <CardTypeSelect value={product.card_type} />
                 <input
                   name="cover"
                   defaultValue={product.cover ?? ""}
