@@ -11,6 +11,7 @@ function read(formData: FormData, key: string) {
 
 const CONFIG_KEYS: Record<string, string[]> = {
   cryptomus: ["merchant_id", "payment_api_key"],
+  nowpayments: ["api_key", "ipn_secret"],
   stripe: ["secret_key", "webhook_secret"],
   paypal: ["client_id", "client_secret", "mode"],
 };
