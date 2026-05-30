@@ -4,7 +4,6 @@ import { ProductCard } from "@/components/product-card";
 import { CategoryNav } from "@/components/category-nav";
 import { StoreHeader } from "@/components/store-header";
 import { StoreTopLinks } from "@/components/store-top-links";
-import { AdMarquee } from "@/components/ad-marquee";
 import { getHomeContent } from "@/lib/site-content";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { getLocale } from "@/lib/i18n/server";
@@ -67,10 +66,6 @@ export default async function Home({ searchParams }: HomePageProps) {
       />
 
       <div className="px-3 pt-3">
-        <div className="mb-3">
-          <AdMarquee locale={locale} />
-        </div>
-
         <StoreTopLinks locale={locale} />
 
         {home.heroEnabled ? (

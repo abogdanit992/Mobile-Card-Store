@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { pickLocalized, type Locale } from "@/lib/i18n/config";
+import { getLocale } from "@/lib/i18n/server";
 
-export async function AdMarquee({ locale }: { locale: Locale }) {
+export async function AdMarquee({ locale: localeProp }: { locale?: Locale } = {}) {
+  const locale = localeProp ?? (await getLocale());
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from("ads")

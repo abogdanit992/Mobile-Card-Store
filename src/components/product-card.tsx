@@ -28,7 +28,7 @@ export function ProductCard({
       className="group flex flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] transition hover:border-[var(--accent-soft)] hover:bg-[var(--card-hover)] hover:shadow-[0_0_20px_var(--accent-glow)]"
     >
       <div
-        className={`relative aspect-[3/4] overflow-hidden bg-gradient-to-br ${gradient}`}
+        className={`relative aspect-[4/3] overflow-hidden bg-gradient-to-br ${gradient}`}
       >
         {coverSrc ? (
           <Image
@@ -36,30 +36,31 @@ export function ProductCard({
             alt={title}
             fill
             unoptimized
-            className="object-cover opacity-90 transition group-hover:scale-105 group-hover:opacity-100"
+            className="object-cover transition group-hover:scale-105"
             sizes="(max-width: 448px) 50vw"
           />
         ) : (
           <div className="flex h-full flex-col items-center justify-center p-2 text-center">
             <span className="text-4xl drop-shadow-lg">💎</span>
-            <span className="mt-2 line-clamp-2 px-1 text-[11px] font-bold uppercase tracking-wide text-white/95">
-              {title}
-            </span>
           </div>
         )}
         <span className="absolute left-2 top-2 rounded-sm bg-[var(--accent)] px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white shadow-lg">
           {badge}
         </span>
-        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-        <p className="absolute bottom-2 left-2 right-2 line-clamp-1 text-[11px] font-semibold text-white drop-shadow-md">
-          {title}
-        </p>
-      </div>
-      <div className="flex items-center justify-between gap-2 px-2.5 py-2">
-        <p className="text-sm font-black text-[var(--gold)]">{formatPrice(price)}</p>
-        <span className="rounded-full bg-[var(--accent)] px-2.5 py-1 text-[9px] font-bold uppercase text-white">
-          {getLabel}
+        <span className="absolute right-2 top-2 rounded-full bg-black/55 px-1.5 py-0.5 text-[10px] font-black text-[var(--gold)] backdrop-blur-sm">
+          ⚡
         </span>
+      </div>
+      <div className="flex flex-1 flex-col gap-1.5 p-2.5">
+        <p className="line-clamp-2 text-xs font-bold leading-snug text-white">{title}</p>
+        <div className="mt-auto flex items-center justify-between gap-2">
+          <span className="text-base font-black text-[var(--gold)]">
+            {formatPrice(price)}
+          </span>
+          <span className="rounded-md bg-[var(--accent)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white transition group-hover:brightness-110">
+            {getLabel}
+          </span>
+        </div>
       </div>
     </Link>
   );
