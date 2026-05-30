@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { adminHref } from "@/lib/admin-url";
-import { createCardAction } from "./actions";
+import { ActionForm } from "@/components/admin/action-form";
+import { bulkImportCardsAction, createCardAction } from "./actions";
 
 export default async function AdminCardsPage() {
   const backHref = await adminHref("/admin");
@@ -46,7 +47,51 @@ export default async function AdminCardsPage() {
       </section>
 
       <section className="mt-4 rounded-2xl border border-neutral-200 bg-white p-4">
-        <h2 className="text-sm font-medium text-neutral-900">Add card code</h2>
+        <h2 className="text-sm font-medium text-neutral-900">Bulk import</h2>
+        <p className="mt-1 text-xs text-neutral-500">
+          Upload a .txt file or paste codes — one per line (e.g.
+          WZT064FC431E1BFF624B83C). Duplicates are skipped automatically.
+        </p>
+        <ActionForm
+          action={bulkImportCardsAction}
+          resetOnSuccess
+          className="mt-3 grid gap-2"
+          buttonClassName="h-10 rounded-lg bg-neutral-900 text-sm font-semibold text-white"
+          submitLabel="Import cards"
+          pendingLabel="Importing…"
+        >
+          <select
+            name="productId"
+            required
+            className="h-10 rounded-lg border border-neutral-300 px-3 text-sm"
+            defaultValue=""
+          >
+            <option value="" disabled>
+              Select product
+            </option>
+            {products?.map((product) => (
+              <option key={product.id} value={product.id}>
+                {product.title} {product.active ? "" : "(inactive)"}
+              </option>
+            ))}
+          </select>
+          <input
+            name="file"
+            type="file"
+            accept=".txt,text/plain"
+            className="block w-full text-xs text-neutral-700 file:mr-2 file:rounded-md file:border-0 file:bg-neutral-900 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white"
+          />
+          <textarea
+            name="codes"
+            rows={5}
+            placeholder={"Or paste codes here, one per line\nWZT064FC431E1BFF624B83C\n..."}
+            className="rounded-lg border border-neutral-300 px-3 py-2 font-mono text-xs"
+          />
+        </ActionForm>
+      </section>
+
+      <section className="mt-4 rounded-2xl border border-neutral-200 bg-white p-4">
+        <h2 className="text-sm font-medium text-neutral-900">Add single card</h2>
         <form action={createCardAction} className="mt-3 grid gap-2">
           <select
             name="productId"

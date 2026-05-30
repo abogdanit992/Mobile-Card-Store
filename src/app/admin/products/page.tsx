@@ -94,6 +94,15 @@ export default async function AdminProductsPage() {
           />
           <CategorySelect categories={cats} />
           <input name="cover" placeholder="Cover URL (optional)" className={inputClass} />
+          <label className="text-xs font-medium text-neutral-600">
+            Or upload cover image
+            <input
+              name="cover_file"
+              type="file"
+              accept="image/*"
+              className="mt-1 block w-full text-xs text-neutral-700 file:mr-2 file:rounded-md file:border-0 file:bg-neutral-900 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white"
+            />
+          </label>
           <textarea
             name="description_en"
             rows={2}
@@ -169,6 +178,15 @@ export default async function AdminProductsPage() {
                   placeholder="Cover URL"
                   className={inputClass}
                 />
+                <label className="text-xs font-medium text-neutral-600">
+                  Replace cover (upload)
+                  <input
+                    name="cover_file"
+                    type="file"
+                    accept="image/*"
+                    className="mt-1 block w-full text-xs text-neutral-700 file:mr-2 file:rounded-md file:border-0 file:bg-neutral-900 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white"
+                  />
+                </label>
                 <textarea
                   name="description_en"
                   rows={2}

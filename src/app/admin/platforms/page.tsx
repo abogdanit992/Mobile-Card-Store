@@ -75,6 +75,15 @@ export default async function AdminPlatformsPage() {
         <input name="name_zh" placeholder="名称 (中文)" className={inputClass} />
         <CategorySelect categories={cats} />
         <input name="logo_url" placeholder="Logo URL" className={inputClass} />
+        <label className="text-xs font-medium text-neutral-600">
+          Or upload logo
+          <input
+            name="logo_file"
+            type="file"
+            accept="image/*"
+            className="mt-1 block w-full text-xs text-neutral-700 file:mr-2 file:rounded-md file:border-0 file:bg-neutral-900 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white"
+          />
+        </label>
         <input name="android_url" placeholder="Android URL" className={inputClass} />
         <input name="ios_url" placeholder="iOS URL" className={inputClass} />
         <input name="cloud_url" placeholder="Cloud / backup URL" className={inputClass} />
@@ -135,6 +144,15 @@ export default async function AdminPlatformsPage() {
                 placeholder="Logo URL"
                 className={inputClass}
               />
+              <label className="text-xs font-medium text-neutral-600">
+                Replace logo (upload)
+                <input
+                  name="logo_file"
+                  type="file"
+                  accept="image/*"
+                  className="mt-1 block w-full text-xs text-neutral-700 file:mr-2 file:rounded-md file:border-0 file:bg-neutral-900 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white"
+                />
+              </label>
               <input
                 name="android_url"
                 defaultValue={p.android_url ?? ""}

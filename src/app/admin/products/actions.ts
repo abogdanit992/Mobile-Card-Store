@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { uploadImageFile } from "@/lib/storage";
 import type { Database } from "@/types/database";
 import type { ActionResult } from "@/lib/admin/action-result";
 
@@ -23,6 +24,14 @@ export async function createProductAction(
     return { ok: false, message: "Invalid product input." };
   }
 
+  let coverUrl = cover || null;
+  try {
+    const uploaded = await uploadImageFile(formData.get("cover_file"), "products");
+    if (uploaded) coverUrl = uploaded;
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : "Upload failed." };
+  }
+
   const supabase = await createSupabaseServerClient();
   const payload: Database["public"]["Tables"]["products"]["Insert"] = {
     title: nameEn,
@@ -30,7 +39,7 @@ export async function createProductAction(
     name_zh: nameZh || null,
     description_en: read(formData, "description_en") || null,
     description_zh: read(formData, "description_zh") || null,
-    cover: cover || null,
+    cover: coverUrl,
     category_id: categoryId || null,
     price: priceRaw,
     active: true,
@@ -59,6 +68,14 @@ export async function updateProductAction(
     return { ok: false, message: "Invalid product input." };
   }
 
+  let coverUrl = read(formData, "cover") || null;
+  try {
+    const uploaded = await uploadImageFile(formData.get("cover_file"), "products");
+    if (uploaded) coverUrl = uploaded;
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : "Upload failed." };
+  }
+
   const supabase = await createSupabaseServerClient();
   const update: Database["public"]["Tables"]["products"]["Update"] = {
     title: nameEn,
@@ -66,7 +83,7 @@ export async function updateProductAction(
     name_zh: read(formData, "name_zh") || null,
     description_en: read(formData, "description_en") || null,
     description_zh: read(formData, "description_zh") || null,
-    cover: read(formData, "cover") || null,
+    cover: coverUrl,
     category_id: categoryId || null,
     price: priceRaw,
   };

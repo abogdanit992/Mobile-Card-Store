@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { uploadImageFile } from "@/lib/storage";
 import type { Database } from "@/types/database";
 import type { ActionResult } from "@/lib/admin/action-result";
 
@@ -19,11 +20,19 @@ export async function createPlatformAction(
   const categoryId = read(formData, "category_id");
   const sortOrder = Number(formData.get("sort_order") ?? 0);
 
+  let logoUrl = read(formData, "logo_url") || null;
+  try {
+    const uploaded = await uploadImageFile(formData.get("logo_file"), "platforms");
+    if (uploaded) logoUrl = uploaded;
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : "Upload failed." };
+  }
+
   const supabase = await createSupabaseServerClient();
   const payload: Database["public"]["Tables"]["platform_downloads"]["Insert"] = {
     name_en: nameEn,
     name_zh: read(formData, "name_zh") || null,
-    logo_url: read(formData, "logo_url") || null,
+    logo_url: logoUrl,
     android_url: read(formData, "android_url") || null,
     ios_url: read(formData, "ios_url") || null,
     cloud_url: read(formData, "cloud_url") || null,
@@ -54,11 +63,19 @@ export async function updatePlatformAction(
   const categoryId = read(formData, "category_id");
   const sortOrder = Number(formData.get("sort_order") ?? 0);
 
+  let logoUrl = read(formData, "logo_url") || null;
+  try {
+    const uploaded = await uploadImageFile(formData.get("logo_file"), "platforms");
+    if (uploaded) logoUrl = uploaded;
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : "Upload failed." };
+  }
+
   const supabase = await createSupabaseServerClient();
   const update: Database["public"]["Tables"]["platform_downloads"]["Update"] = {
     name_en: nameEn,
     name_zh: read(formData, "name_zh") || null,
-    logo_url: read(formData, "logo_url") || null,
+    logo_url: logoUrl,
     android_url: read(formData, "android_url") || null,
     ios_url: read(formData, "ios_url") || null,
     cloud_url: read(formData, "cloud_url") || null,
