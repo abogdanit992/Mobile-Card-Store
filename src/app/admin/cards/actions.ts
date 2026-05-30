@@ -6,17 +6,21 @@ import type { Database } from "@/types/database";
 import type { ActionResult } from "@/lib/admin/action-result";
 
 /** Split a blob of text into clean, de-duplicated card codes. */
-function parseCodes(raw: string): string[] {
+function parseCodes(raw: string): { codes: string[]; duplicates: number } {
   const seen = new Set<string>();
   const out: string[] = [];
+  let duplicates = 0;
   for (const line of raw.split(/[\r\n,;\t ]+/)) {
     const code = line.trim();
     if (!code) continue;
-    if (seen.has(code)) continue;
+    if (seen.has(code)) {
+      duplicates += 1;
+      continue;
+    }
     seen.add(code);
     out.push(code);
   }
-  return out;
+  return { codes: out, duplicates };
 }
 
 export async function bulkImportCardsAction(
@@ -33,7 +37,7 @@ export async function bulkImportCardsAction(
     fileText = await file.text();
   }
 
-  const codes = parseCodes(`${pasted}\n${fileText}`);
+  const { codes, duplicates: inFileDuplicates } = parseCodes(`${pasted}\n${fileText}`);
   if (codes.length === 0) {
     return { ok: false, message: "No card codes found. Paste codes or upload a .txt file." };
   }
@@ -61,17 +65,20 @@ export async function bulkImportCardsAction(
   revalidatePath("/admin/cards");
 
   const skipped = codes.length - imported;
+  const parts: string[] = [];
+  if (inFileDuplicates > 0) parts.push(`Removed ${inFileDuplicates} in-file duplicate(s)`);
+  if (skipped > 0) parts.push(`Skipped ${skipped} already in stock`);
+  const detail = parts.length > 0 ? ` ${parts.join(". ")}.` : "";
+
   if (imported === 0) {
     return {
       ok: false,
-      message: `All ${codes.length} code(s) already exist. Nothing imported.`,
+      message: `Nothing imported.${detail || ` All ${codes.length} code(s) already exist.`}`,
     };
   }
   return {
     ok: true,
-    message: `Imported ${imported} card(s).${
-      skipped > 0 ? ` Skipped ${skipped} duplicate(s).` : ""
-    }`,
+    message: `Imported ${imported} card(s).${detail}`,
   };
 }
 
@@ -98,4 +105,44 @@ export async function createCardAction(formData: FormData) {
   }
 
   revalidatePath("/admin/cards");
+}
+
+export async function deleteCardAction(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const id = String(formData.get("id") ?? "").trim();
+  if (!id) return { ok: false, message: "Missing card id." };
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.from("cards").delete().eq("id", id);
+  if (error) return { ok: false, message: `Failed to delete: ${error.message}` };
+
+  revalidatePath("/admin/cards");
+  return { ok: true, message: "Card deleted." };
+}
+
+export async function clearCardsAction(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const scope = String(formData.get("scope") ?? "").trim();
+  const supabase = await createSupabaseServerClient();
+
+  let query = supabase.from("cards").delete({ count: "exact" });
+  if (scope === "used") {
+    query = query.eq("used", true);
+  } else if (scope === "available") {
+    query = query.eq("used", false);
+  } else if (scope === "all") {
+    query = query.not("id", "is", null);
+  } else {
+    return { ok: false, message: "Unknown clear scope." };
+  }
+
+  const { error, count } = await query;
+  if (error) return { ok: false, message: `Failed to clear: ${error.message}` };
+
+  revalidatePath("/admin/cards");
+  return { ok: true, message: `Cleared ${count ?? 0} card(s).` };
 }

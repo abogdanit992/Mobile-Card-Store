@@ -2,7 +2,12 @@ import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { adminHref } from "@/lib/admin-url";
 import { ActionForm } from "@/components/admin/action-form";
-import { bulkImportCardsAction, createCardAction } from "./actions";
+import {
+  bulkImportCardsAction,
+  clearCardsAction,
+  createCardAction,
+  deleteCardAction,
+} from "./actions";
 
 export default async function AdminCardsPage() {
   const backHref = await adminHref("/admin");
@@ -23,6 +28,7 @@ export default async function AdminCardsPage() {
   const total = cards?.length ?? 0;
   const available = cards?.filter((item) => !item.used).length ?? 0;
   const used = total - available;
+  const productName = new Map((products ?? []).map((p) => [p.id, p.title]));
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-neutral-50 px-4 py-6">
@@ -43,6 +49,42 @@ export default async function AdminCardsPage() {
         <div className="rounded-xl border border-neutral-200 bg-white p-2">
           <p className="text-neutral-500">Used</p>
           <p className="mt-1 text-base font-semibold text-amber-700">{used}</p>
+        </div>
+      </section>
+
+      <section className="mt-3 rounded-2xl border border-neutral-200 bg-white p-4">
+        <h2 className="text-sm font-medium text-neutral-900">Clear inventory</h2>
+        <p className="mt-1 text-xs text-neutral-500">
+          Remove old / test cards. Deleting cards updates the counts above.
+        </p>
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          <ActionForm
+            action={clearCardsAction}
+            buttonClassName="h-9 w-full rounded-lg border border-amber-300 text-xs font-semibold text-amber-700"
+            submitLabel="Clear used"
+            pendingLabel="…"
+            confirm="Delete ALL used cards? This cannot be undone."
+          >
+            <input type="hidden" name="scope" value="used" />
+          </ActionForm>
+          <ActionForm
+            action={clearCardsAction}
+            buttonClassName="h-9 w-full rounded-lg border border-neutral-300 text-xs font-semibold text-neutral-700"
+            submitLabel="Clear available"
+            pendingLabel="…"
+            confirm="Delete ALL available cards? This cannot be undone."
+          >
+            <input type="hidden" name="scope" value="available" />
+          </ActionForm>
+          <ActionForm
+            action={clearCardsAction}
+            buttonClassName="h-9 w-full rounded-lg border border-red-300 text-xs font-semibold text-red-600"
+            submitLabel="Clear ALL"
+            pendingLabel="…"
+            confirm="Delete EVERY card in inventory? This cannot be undone."
+          >
+            <input type="hidden" name="scope" value="all" />
+          </ActionForm>
         </div>
       </section>
 
@@ -138,10 +180,22 @@ export default async function AdminCardsPage() {
               <p className="break-all rounded-md bg-neutral-100 p-2 font-mono text-xs text-neutral-900">
                 {card.code}
               </p>
-              <p className="mt-2 text-xs text-neutral-600">Product: {card.product_id}</p>
+              <p className="mt-2 text-xs text-neutral-600">
+                Product: {productName.get(card.product_id) ?? card.product_id}
+              </p>
               <p className="mt-1 text-xs text-neutral-600">
                 Status: {card.used ? "Used" : "Available"}
               </p>
+              <ActionForm
+                action={deleteCardAction}
+                className="mt-2"
+                buttonClassName="h-8 w-full rounded-lg border border-red-300 text-xs font-semibold text-red-600"
+                submitLabel="Delete card"
+                pendingLabel="Deleting…"
+                confirm="Delete this card? This cannot be undone."
+              >
+                <input type="hidden" name="id" value={card.id} />
+              </ActionForm>
             </article>
           ))
         ) : (
