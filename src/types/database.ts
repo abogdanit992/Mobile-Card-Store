@@ -312,6 +312,36 @@ export type Database = {
         };
         Relationships: [];
       };
+      ads: {
+        Row: {
+          id: string;
+          text_en: string;
+          text_zh: string | null;
+          link_url: string | null;
+          active: boolean;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          text_en: string;
+          text_zh?: string | null;
+          link_url?: string | null;
+          active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          text_en?: string;
+          text_zh?: string | null;
+          link_url?: string | null;
+          active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       faqs: {
         Row: {
           id: string;

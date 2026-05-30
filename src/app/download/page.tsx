@@ -5,6 +5,7 @@ import { StoreHeader } from "@/components/store-header";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getTranslations } from "@/lib/i18n/server";
 import { pickLocalized } from "@/lib/i18n/config";
+import { safeImageSrc } from "@/lib/img";
 
 function DownloadLink({
   href,
@@ -63,6 +64,7 @@ export default async function DownloadPage() {
           <ul className="mt-3 space-y-3">
             {apps.map((app) => {
               const name = pickLocalized(locale, app.name_en, app.name_zh);
+              const logoSrc = safeImageSrc(app.logo_url);
               return (
                 <li
                   key={app.id}
@@ -70,9 +72,9 @@ export default async function DownloadPage() {
                 >
                   <div className="flex gap-3">
                     <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-black/40">
-                      {app.logo_url ? (
+                      {logoSrc ? (
                         <Image
-                          src={app.logo_url}
+                          src={logoSrc}
                           alt={name}
                           fill
                           className="object-cover"

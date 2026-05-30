@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { formatPrice, productBadge, productGradientClass } from "@/lib/format";
+import { safeImageSrc } from "@/lib/img";
 
 type ProductCardProps = {
   id: string;
@@ -19,6 +20,7 @@ export function ProductCard({
 }: ProductCardProps) {
   const gradient = productGradientClass(title);
   const badge = productBadge(title);
+  const coverSrc = safeImageSrc(cover);
 
   return (
     <Link
@@ -28,11 +30,12 @@ export function ProductCard({
       <div
         className={`relative aspect-[3/4] overflow-hidden bg-gradient-to-br ${gradient}`}
       >
-        {cover ? (
+        {coverSrc ? (
           <Image
-            src={cover}
+            src={coverSrc}
             alt={title}
             fill
+            unoptimized
             className="object-cover opacity-90 transition group-hover:scale-105 group-hover:opacity-100"
             sizes="(max-width: 448px) 50vw"
           />

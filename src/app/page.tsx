@@ -4,6 +4,8 @@ import { ProductCard } from "@/components/product-card";
 import { CategoryNav } from "@/components/category-nav";
 import { StoreHeader } from "@/components/store-header";
 import { StoreTopLinks } from "@/components/store-top-links";
+import { AdMarquee } from "@/components/ad-marquee";
+import { getHomeContent } from "@/lib/site-content";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { getLocale } from "@/lib/i18n/server";
 import { getSiteLanguageSettings } from "@/lib/i18n/server";
@@ -22,6 +24,7 @@ export default async function Home({ searchParams }: HomePageProps) {
   const locale = await getLocale();
   const langSettings = await getSiteLanguageSettings();
   const t = getDictionary(locale);
+  const home = await getHomeContent(locale);
 
   const supabase = await createSupabaseServerClient();
 
@@ -57,25 +60,31 @@ export default async function Home({ searchParams }: HomePageProps) {
             ? pickLocalized(locale, activeCatName.name_en, activeCatName.name_zh)
             : t.featured
         }
-        subtitle={t.instantDelivery}
+        subtitle={home.tagline}
         rightSlot={
           <LanguageSwitcher locale={locale} enabled={langSettings.enabled} />
         }
       />
 
       <div className="px-3 pt-3">
+        <div className="mb-3">
+          <AdMarquee locale={locale} />
+        </div>
+
         <StoreTopLinks locale={locale} />
 
-        <section className="relative mt-3 overflow-hidden rounded-xl border border-[var(--border)] bg-gradient-to-br from-[#2a0f24] via-[#1a0a18] to-black p-4">
-          <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-[var(--accent)]/20 blur-2xl" />
-          <p className="relative text-[10px] font-black uppercase tracking-[0.2em] text-[var(--accent-soft)]">
-            {t.membersOnly}
-          </p>
-          <h2 className="relative mt-1 text-base font-black text-white">
-            {t.vipZone}
-          </h2>
-          <p className="relative mt-1 text-xs text-[var(--muted)]">{t.vipZoneDesc}</p>
-        </section>
+        {home.heroEnabled ? (
+          <section className="relative mt-3 overflow-hidden rounded-xl border border-[var(--border)] bg-gradient-to-br from-[#2a0f24] via-[#1a0a18] to-black p-4">
+            <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-[var(--accent)]/20 blur-2xl" />
+            <p className="relative text-[10px] font-black uppercase tracking-[0.2em] text-[var(--accent-soft)]">
+              {home.heroEyebrow}
+            </p>
+            <h2 className="relative mt-1 text-base font-black text-white">
+              {home.heroTitle}
+            </h2>
+            <p className="relative mt-1 text-xs text-[var(--muted)]">{home.heroDesc}</p>
+          </section>
+        ) : null}
 
         <div className="mt-3">
           <CategoryNav categories={cats} activeId={activeCat} locale={locale} />

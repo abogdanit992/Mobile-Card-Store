@@ -7,6 +7,8 @@ const adminLinks = [
   { path: "/admin/categories", label: "分类管理 Categories", desc: "主站板块 / 排序 / 图标" },
   { path: "/admin/platforms", label: "平台下载 Downloads", desc: "各直播软件下载地址" },
   { path: "/admin/links", label: "快捷按钮 Quick Links", desc: "主站顶部按钮 / 排序 / 显隐" },
+  { path: "/admin/ads", label: "滚动广告 Ads", desc: "首页跑马灯 / 添加编辑删除显隐" },
+  { path: "/admin/homepage", label: "首页文案 Homepage", desc: "标语 / VIP 横幅 文案" },
   { path: "/admin/faqs", label: "常见问题 FAQ", desc: "问答内容 / 排序 / 显隐" },
   { path: "/admin/payments", label: "支付通道 Payments", desc: "Cryptomus / Stripe / PayPal" },
   { path: "/admin/orders", label: "订单管理 Orders", desc: "查看支付与发卡状态" },

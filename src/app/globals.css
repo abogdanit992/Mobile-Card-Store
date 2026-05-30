@@ -42,3 +42,34 @@ body {
 .text-glow {
   text-shadow: 0 0 20px var(--accent-glow);
 }
+
+/* right-to-left scrolling ad marquee */
+.marquee-viewport {
+  overflow: hidden;
+  white-space: nowrap;
+}
+.marquee-content {
+  display: inline-flex;
+  width: max-content;
+  animation: marquee-scroll 24s linear infinite;
+}
+.marquee-content:hover {
+  animation-play-state: paused;
+}
+.marquee-track {
+  display: inline-flex;
+  align-items: center;
+}
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-content {
+    animation: none;
+  }
+}

@@ -7,6 +7,7 @@ import { PrimaryButton } from "@/components/primary-button";
 import { StoreHeader } from "@/components/store-header";
 import { getTranslations } from "@/lib/i18n/server";
 import { pickLocalized } from "@/lib/i18n/config";
+import { safeImageSrc } from "@/lib/img";
 
 type ProductDetailPageProps = {
   params: Promise<{
@@ -61,11 +62,12 @@ export default async function ProductDetailPage({
       <div className="px-3 pb-28">
         <section className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)]">
           <div className={`relative aspect-[4/5] bg-gradient-to-br ${gradient}`}>
-            {product.cover ? (
+            {safeImageSrc(product.cover) ? (
               <Image
-                src={product.cover}
+                src={safeImageSrc(product.cover)!}
                 alt={productName}
                 fill
+                unoptimized
                 className="object-cover"
                 sizes="448px"
                 priority
