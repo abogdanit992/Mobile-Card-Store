@@ -9,11 +9,10 @@ import {
   toggleFaqAction,
   updateFaqAction,
 } from "./actions";
-
-const inputClass =
-  "h-10 w-full rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900";
-const areaClass =
-  "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900";
+import {
+  adminInputClass as inputClass,
+  adminTextareaClass as areaClass,
+} from "@/lib/admin/form-styles";
 
 export default async function AdminFaqsPage() {
   const { locale, t } = await getAdminTranslations();

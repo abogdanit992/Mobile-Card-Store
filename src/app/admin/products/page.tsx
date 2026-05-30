@@ -12,9 +12,10 @@ import {
   toggleProductStatusAction,
   updateProductAction,
 } from "./actions";
-
-const inputClass =
-  "h-10 w-full rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900";
+import {
+  adminInputClass as inputClass,
+  adminTextareaClass,
+} from "@/lib/admin/form-styles";
 
 type CategoryOption = { id: string; name_en: string; name_zh: string | null };
 
@@ -128,13 +129,13 @@ export default async function AdminProductsPage() {
             name="description_en"
             rows={2}
             placeholder={t.descEn}
-            className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+            className={adminTextareaClass}
           />
           <textarea
             name="description_zh"
             rows={2}
             placeholder={t.descZh}
-            className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+            className={adminTextareaClass}
           />
         </ActionForm>
       </section>
@@ -219,14 +220,14 @@ export default async function AdminProductsPage() {
                   rows={2}
                   defaultValue={product.description_en ?? ""}
                   placeholder={t.descEn}
-                  className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+                  className={adminTextareaClass}
                 />
                 <textarea
                   name="description_zh"
                   rows={2}
                   defaultValue={product.description_zh ?? ""}
                   placeholder={t.descZh}
-                  className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+                  className={adminTextareaClass}
                 />
               </ActionForm>
 

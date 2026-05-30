@@ -14,7 +14,10 @@ import {
   deleteCardAction,
 } from "./actions";
 
-const selectClass = "h-10 w-full rounded-lg border border-neutral-300 px-3 text-sm";
+import {
+  adminSelectClass as selectClass,
+  adminTextareaMonoClass,
+} from "@/lib/admin/form-styles";
 
 type CategoryRow = { id: string; name_en: string; name_zh: string | null };
 
@@ -171,7 +174,7 @@ export default async function AdminCardsPage() {
             name="codes"
             rows={5}
             placeholder={t.pasteCodesPh}
-            className="rounded-lg border border-neutral-300 px-3 py-2 font-mono text-xs"
+            className={adminTextareaMonoClass}
           />
         </ActionForm>
       </section>
@@ -186,7 +189,7 @@ export default async function AdminCardsPage() {
             type="text"
             required
             placeholder={t.cardCodeUnique}
-            className="h-10 rounded-lg border border-neutral-300 px-3 text-sm"
+            className="h-10 rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900 placeholder:text-neutral-600"
           />
           <button
             type="submit"

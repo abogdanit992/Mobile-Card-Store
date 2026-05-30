@@ -5,9 +5,7 @@ import { ActionForm } from "@/components/admin/action-form";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { getAdminTranslations } from "@/lib/i18n/admin-server";
 import { updateLanguageSettingsAction } from "./actions";
-
-const inputClass =
-  "h-10 w-full rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900";
+import { adminInputClass as inputClass } from "@/lib/admin/form-styles";
 
 export default async function AdminSettingsPage() {
   const { locale, t } = await getAdminTranslations();

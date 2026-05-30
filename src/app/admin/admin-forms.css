@@ -1,0 +1,29 @@
+/**
+ * Admin form controls on light panels inherit body --foreground (#f8f0ff),
+ * which is nearly invisible on white backgrounds. These rules force readable
+ * text and placeholders across every admin page.
+ */
+.admin-panel input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="submit"]):not([type="button"]),
+.admin-panel select,
+.admin-panel textarea {
+  color: #171717;
+  background-color: #ffffff;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.admin-panel input::placeholder,
+.admin-panel textarea::placeholder {
+  color: #525252;
+  opacity: 1;
+}
+
+.admin-panel select option {
+  color: #171717;
+  background-color: #ffffff;
+}
+
+/* Placeholder option in required selects (e.g. "选择平台") */
+.admin-panel select:required:invalid {
+  color: #525252;
+}

@@ -12,9 +12,7 @@ import {
   togglePlatformAction,
   updatePlatformAction,
 } from "./actions";
-
-const inputClass =
-  "h-10 w-full rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900";
+import { adminInputClass as inputClass } from "@/lib/admin/form-styles";
 
 type CategoryOption = { id: string; name_en: string; name_zh: string | null };
 

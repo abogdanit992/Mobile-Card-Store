@@ -9,9 +9,7 @@ import {
   toggleCategoryAction,
   updateCategoryAction,
 } from "./actions";
-
-const inputClass =
-  "h-10 w-full rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900";
+import { adminInputClass as inputClass } from "@/lib/admin/form-styles";
 
 export default async function AdminCategoriesPage() {
   const { locale, t } = await getAdminTranslations();
