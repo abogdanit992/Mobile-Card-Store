@@ -1,7 +1,8 @@
-import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { adminHref } from "@/lib/admin-url";
 import { ActionForm } from "@/components/admin/action-form";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { getAdminTranslations } from "@/lib/i18n/admin-server";
 import { updatePaymentChannelAction } from "./actions";
 
 const inputClass =
@@ -36,6 +37,7 @@ function getConfigValue(config: unknown, key: string): string {
 }
 
 export default async function AdminPaymentsPage() {
+  const { locale, t } = await getAdminTranslations();
   const backHref = await adminHref("/admin");
   const supabase = await createSupabaseServerClient();
   const { data: channels, error } = await supabase
@@ -45,17 +47,17 @@ export default async function AdminPaymentsPage() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-neutral-50 px-4 py-6">
-      <Link href={backHref} className="text-sm text-neutral-500">
-        ← Back to admin
-      </Link>
-      <h1 className="mt-1 text-2xl font-semibold text-neutral-900">Payment Channels</h1>
-      <p className="text-sm text-neutral-500">
-        Only enabled channels appear at checkout. Keys are stored server-side.
-      </p>
+      <AdminPageHeader
+        locale={locale}
+        backHref={backHref}
+        backLabel={t.backToAdmin}
+        title={t.paymentsTitle}
+        subtitle={t.paymentsSubtitle}
+      />
 
       {error ? (
         <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
-          {error.message}
+          {t.loadFailed}: {error.message}
         </p>
       ) : null}
 
@@ -68,8 +70,8 @@ export default async function AdminPaymentsPage() {
               action={updatePaymentChannelAction}
               className="space-y-2 rounded-2xl border border-neutral-200 bg-white p-4"
               buttonClassName="h-10 w-full rounded-lg bg-neutral-900 text-sm font-semibold text-white"
-              submitLabel="Save"
-              pendingLabel="Saving…"
+              submitLabel={t.save}
+              pendingLabel={t.saving}
             >
               <input type="hidden" name="id" value={ch.id} />
               <input type="hidden" name="provider" value={ch.provider} />
@@ -84,19 +86,19 @@ export default async function AdminPaymentsPage() {
                     defaultChecked={ch.enabled}
                     className="h-4 w-4"
                   />
-                  Enabled
+                  {t.enabled}
                 </label>
               </div>
               <input
                 name="label_en"
                 defaultValue={ch.label_en}
-                placeholder="Label (EN)"
+                placeholder={t.labelEn}
                 className={inputClass}
               />
               <input
                 name="label_zh"
                 defaultValue={ch.label_zh ?? ""}
-                placeholder="标签 (中文)"
+                placeholder={t.labelZh}
                 className={inputClass}
               />
               {fields.map((f) => (
@@ -114,6 +116,7 @@ export default async function AdminPaymentsPage() {
                 name="sort_order"
                 type="number"
                 defaultValue={ch.sort_order}
+                placeholder={t.sortOrder}
                 className={inputClass}
               />
             </ActionForm>

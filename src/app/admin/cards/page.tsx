@@ -1,8 +1,12 @@
-import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { adminHref } from "@/lib/admin-url";
 import { ActionForm } from "@/components/admin/action-form";
-import { CARD_TYPES } from "@/lib/card-types";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { getAdminTranslations } from "@/lib/i18n/admin-server";
+import { getAdminCardTypes } from "@/lib/i18n/admin-dictionaries";
+import { adminCategoryLabel, adminProductLabel } from "@/lib/i18n/admin-labels";
+import type { Locale } from "@/lib/i18n/config";
+import type { AdminDict } from "@/lib/i18n/admin-dictionaries";
 import {
   bulkImportCardsAction,
   clearCardsAction,
@@ -12,30 +16,40 @@ import {
 
 const selectClass = "h-10 w-full rounded-lg border border-neutral-300 px-3 text-sm";
 
-function PlatformSelect({ categories }: { categories: { id: string; name_en: string }[] }) {
+type CategoryRow = { id: string; name_en: string; name_zh: string | null };
+
+function PlatformSelect({
+  categories,
+  locale,
+  t,
+}: {
+  categories: CategoryRow[];
+  locale: Locale;
+  t: AdminDict;
+}) {
   return (
     <select name="categoryId" required defaultValue="" className={selectClass}>
       <option value="" disabled>
-        Select platform
+        {t.selectPlatform}
       </option>
       {categories.map((c) => (
         <option key={c.id} value={c.id}>
-          {c.name_en}
+          {adminCategoryLabel(locale, c.name_en, c.name_zh)}
         </option>
       ))}
     </select>
   );
 }
 
-function CardTypeSelect() {
+function CardTypeSelect({ t }: { t: AdminDict }) {
   return (
     <select name="cardType" required defaultValue="" className={selectClass}>
       <option value="" disabled>
-        Select card type
+        {t.selectCardType}
       </option>
-      {CARD_TYPES.map((t) => (
-        <option key={t.value} value={t.value}>
-          {t.label}
+      {getAdminCardTypes(t).map((ct) => (
+        <option key={ct.value} value={ct.value}>
+          {ct.label}
         </option>
       ))}
     </select>
@@ -43,6 +57,7 @@ function CardTypeSelect() {
 }
 
 export default async function AdminCardsPage() {
+  const { locale, t } = await getAdminTranslations();
   const backHref = await adminHref("/admin");
   const supabase = await createSupabaseServerClient();
 
@@ -50,11 +65,11 @@ export default async function AdminCardsPage() {
     await Promise.all([
       supabase
         .from("products")
-        .select("id,title,active")
+        .select("id,title,name_en,name_zh,active")
         .order("created_at", { ascending: false }),
       supabase
         .from("categories")
-        .select("id,name_en")
+        .select("id,name_en,name_zh")
         .order("sort_order", { ascending: true }),
       supabase
         .from("cards")
@@ -68,60 +83,65 @@ export default async function AdminCardsPage() {
   const total = cards?.length ?? 0;
   const available = cards?.filter((item) => !item.used).length ?? 0;
   const used = total - available;
-  const productName = new Map((products ?? []).map((p) => [p.id, p.title]));
+  const productName = new Map(
+    (products ?? []).map((p) => [
+      p.id,
+      adminProductLabel(locale, p.name_en, p.name_zh, p.title),
+    ]),
+  );
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-neutral-50 px-4 py-6">
-      <Link href={backHref} className="text-sm text-neutral-500">
-        ← Back to admin
-      </Link>
-      <h1 className="mt-1 text-2xl font-semibold text-neutral-900">Card Inventory</h1>
+      <AdminPageHeader
+        locale={locale}
+        backHref={backHref}
+        backLabel={t.backToAdmin}
+        title={t.cardsTitle}
+      />
 
       <section className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
         <div className="rounded-xl border border-neutral-200 bg-white p-2">
-          <p className="text-neutral-500">Total</p>
+          <p className="text-neutral-500">{t.statTotal}</p>
           <p className="mt-1 text-base font-semibold text-neutral-900">{total}</p>
         </div>
         <div className="rounded-xl border border-neutral-200 bg-white p-2">
-          <p className="text-neutral-500">Available</p>
+          <p className="text-neutral-500">{t.statAvailable}</p>
           <p className="mt-1 text-base font-semibold text-emerald-700">{available}</p>
         </div>
         <div className="rounded-xl border border-neutral-200 bg-white p-2">
-          <p className="text-neutral-500">Used</p>
+          <p className="text-neutral-500">{t.statUsed}</p>
           <p className="mt-1 text-base font-semibold text-amber-700">{used}</p>
         </div>
       </section>
 
       <section className="mt-3 rounded-2xl border border-neutral-200 bg-white p-4">
-        <h2 className="text-sm font-medium text-neutral-900">Clear inventory</h2>
-        <p className="mt-1 text-xs text-neutral-500">
-          Remove old / test cards. Deleting cards updates the counts above.
-        </p>
+        <h2 className="text-sm font-medium text-neutral-900">{t.clearInventory}</h2>
+        <p className="mt-1 text-xs text-neutral-500">{t.clearInventoryHint}</p>
         <div className="mt-3 grid grid-cols-3 gap-2">
           <ActionForm
             action={clearCardsAction}
             buttonClassName="h-9 w-full rounded-lg border border-amber-300 text-xs font-semibold text-amber-700"
-            submitLabel="Clear used"
-            pendingLabel="…"
-            confirm="Delete ALL used cards? This cannot be undone."
+            submitLabel={t.clearUsed}
+            pendingLabel={t.pending}
+            confirm={t.confirmClearUsed}
           >
             <input type="hidden" name="scope" value="used" />
           </ActionForm>
           <ActionForm
             action={clearCardsAction}
             buttonClassName="h-9 w-full rounded-lg border border-neutral-300 text-xs font-semibold text-neutral-700"
-            submitLabel="Clear available"
-            pendingLabel="…"
-            confirm="Delete ALL available cards? This cannot be undone."
+            submitLabel={t.clearAvailable}
+            pendingLabel={t.pending}
+            confirm={t.confirmClearAvailable}
           >
             <input type="hidden" name="scope" value="available" />
           </ActionForm>
           <ActionForm
             action={clearCardsAction}
             buttonClassName="h-9 w-full rounded-lg border border-red-300 text-xs font-semibold text-red-600"
-            submitLabel="Clear ALL"
-            pendingLabel="…"
-            confirm="Delete EVERY card in inventory? This cannot be undone."
+            submitLabel={t.clearAll}
+            pendingLabel={t.pending}
+            confirm={t.confirmClearAll}
           >
             <input type="hidden" name="scope" value="all" />
           </ActionForm>
@@ -129,21 +149,18 @@ export default async function AdminCardsPage() {
       </section>
 
       <section className="mt-4 rounded-2xl border border-neutral-200 bg-white p-4">
-        <h2 className="text-sm font-medium text-neutral-900">Bulk import</h2>
-        <p className="mt-1 text-xs text-neutral-500">
-          Upload a .txt file or paste codes — one per line (e.g.
-          WZT064FC431E1BFF624B83C). Duplicates are skipped automatically.
-        </p>
+        <h2 className="text-sm font-medium text-neutral-900">{t.bulkImport}</h2>
+        <p className="mt-1 text-xs text-neutral-500">{t.bulkImportHint}</p>
         <ActionForm
           action={bulkImportCardsAction}
           resetOnSuccess
           className="mt-3 grid gap-2"
           buttonClassName="h-10 rounded-lg bg-neutral-900 text-sm font-semibold text-white"
-          submitLabel="Import cards"
-          pendingLabel="Importing…"
+          submitLabel={t.importCards}
+          pendingLabel={t.importing}
         >
-          <PlatformSelect categories={cats} />
-          <CardTypeSelect />
+          <PlatformSelect categories={cats} locale={locale} t={t} />
+          <CardTypeSelect t={t} />
           <input
             name="file"
             type="file"
@@ -153,29 +170,29 @@ export default async function AdminCardsPage() {
           <textarea
             name="codes"
             rows={5}
-            placeholder={"Or paste codes here, one per line\nWZT064FC431E1BFF624B83C\n..."}
+            placeholder={t.pasteCodesPh}
             className="rounded-lg border border-neutral-300 px-3 py-2 font-mono text-xs"
           />
         </ActionForm>
       </section>
 
       <section className="mt-4 rounded-2xl border border-neutral-200 bg-white p-4">
-        <h2 className="text-sm font-medium text-neutral-900">Add single card</h2>
+        <h2 className="text-sm font-medium text-neutral-900">{t.addSingleCard}</h2>
         <form action={createCardAction} className="mt-3 grid gap-2">
-          <PlatformSelect categories={cats} />
-          <CardTypeSelect />
+          <PlatformSelect categories={cats} locale={locale} t={t} />
+          <CardTypeSelect t={t} />
           <input
             name="code"
             type="text"
             required
-            placeholder="Card code (unique)"
+            placeholder={t.cardCodeUnique}
             className="h-10 rounded-lg border border-neutral-300 px-3 text-sm"
           />
           <button
             type="submit"
             className="h-10 rounded-lg bg-neutral-900 text-sm font-medium text-white"
           >
-            Add Card
+            {t.addCardBtn}
           </button>
         </form>
       </section>
@@ -183,7 +200,7 @@ export default async function AdminCardsPage() {
       <section className="mt-4 grid gap-3">
         {error ? (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            Failed to load cards: {error.message}
+            {t.loadFailed}: {error.message}
           </div>
         ) : cards && cards.length > 0 ? (
           cards.map((card) => (
@@ -195,18 +212,18 @@ export default async function AdminCardsPage() {
                 {card.code}
               </p>
               <p className="mt-2 text-xs text-neutral-600">
-                Product: {productName.get(card.product_id) ?? card.product_id}
+                {t.product}: {productName.get(card.product_id) ?? card.product_id}
               </p>
               <p className="mt-1 text-xs text-neutral-600">
-                Status: {card.used ? "Used" : "Available"}
+                {t.status}: {card.used ? t.statusUsed : t.statusAvailable}
               </p>
               <ActionForm
                 action={deleteCardAction}
                 className="mt-2"
                 buttonClassName="h-8 w-full rounded-lg border border-red-300 text-xs font-semibold text-red-600"
-                submitLabel="Delete card"
-                pendingLabel="Deleting…"
-                confirm="Delete this card? This cannot be undone."
+                submitLabel={t.delete}
+                pendingLabel={t.deleting}
+                confirm={t.confirmDeleteCard}
               >
                 <input type="hidden" name="id" value={card.id} />
               </ActionForm>
@@ -214,7 +231,7 @@ export default async function AdminCardsPage() {
           ))
         ) : (
           <div className="rounded-2xl border border-neutral-200 bg-white p-4 text-sm text-neutral-600">
-            No card inventory found.
+            {t.noCards}
           </div>
         )}
       </section>

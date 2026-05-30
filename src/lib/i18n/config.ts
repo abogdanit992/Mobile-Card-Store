@@ -3,6 +3,8 @@ export type Locale = (typeof LOCALES)[number];
 
 export const DEFAULT_LOCALE: Locale = "en";
 export const LOCALE_COOKIE = "locale";
+/** Admin panel UI language (independent from storefront locale). */
+export const ADMIN_LOCALE_COOKIE = "admin_locale";
 
 export function isLocale(value: string | undefined | null): value is Locale {
   return value === "en" || value === "zh";

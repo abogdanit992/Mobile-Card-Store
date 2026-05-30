@@ -1,11 +1,16 @@
-import Link from "next/link";
 import { adminHref } from "@/lib/admin-url";
 import { getSiteLanguageSettings } from "@/lib/i18n/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ActionForm } from "@/components/admin/action-form";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { getAdminTranslations } from "@/lib/i18n/admin-server";
 import { updateLanguageSettingsAction } from "./actions";
 
+const inputClass =
+  "h-10 w-full rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900";
+
 export default async function AdminSettingsPage() {
+  const { locale, t } = await getAdminTranslations();
   const backHref = await adminHref("/admin");
   const settings = await getSiteLanguageSettings();
 
@@ -24,20 +29,22 @@ export default async function AdminSettingsPage() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-neutral-50 px-4 py-6">
-      <Link href={backHref} className="text-sm text-neutral-500">
-        ← Back to admin
-      </Link>
-      <h1 className="mt-1 text-2xl font-semibold text-neutral-900">Site Settings</h1>
-      <p className="text-sm text-neutral-500">Storefront languages</p>
+      <AdminPageHeader
+        locale={locale}
+        backHref={backHref}
+        backLabel={t.backToAdmin}
+        title={t.settingsTitle}
+        subtitle={t.settingsSubtitle}
+      />
 
       <ActionForm
         action={updateLanguageSettingsAction}
         className="mt-4 space-y-3 rounded-2xl border border-neutral-200 bg-white p-4"
         buttonClassName="h-10 w-full rounded-lg bg-neutral-900 text-sm font-semibold text-white"
-        submitLabel="Save settings"
-        pendingLabel="Saving…"
+        submitLabel={t.saveSettings}
+        pendingLabel={t.saving}
       >
-        <p className="text-sm font-semibold text-neutral-900">Enabled languages</p>
+        <p className="text-sm font-semibold text-neutral-900">{t.enabledLanguages}</p>
         <label className="flex items-center gap-2 text-sm text-neutral-700">
           <input
             type="checkbox"
@@ -45,7 +52,7 @@ export default async function AdminSettingsPage() {
             defaultChecked={settings.enabled.includes("en")}
             className="h-4 w-4"
           />
-          English
+          {t.enableEnglish}
         </label>
         <label className="flex items-center gap-2 text-sm text-neutral-700">
           <input
@@ -54,62 +61,45 @@ export default async function AdminSettingsPage() {
             defaultChecked={settings.enabled.includes("zh")}
             className="h-4 w-4"
           />
-          中文 (uncheck to hide Chinese on storefront after launch)
+          {t.enableChinese}
         </label>
 
-        <p className="mt-2 text-sm font-semibold text-neutral-900">Default language</p>
+        <p className="mt-2 text-sm font-semibold text-neutral-900">{t.defaultLanguage}</p>
         <select
           name="default_language"
           defaultValue={settings.default}
-          className="h-10 w-full rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900"
+          className={inputClass}
         >
-          <option value="en">English</option>
-          <option value="zh">中文</option>
+          <option value="en">{t.enableEnglish}</option>
+          <option value="zh">{t.langZh}</option>
         </select>
 
-        <p className="mt-2 text-sm font-semibold text-neutral-900">
-          Tawk.to live chat (recommended)
-        </p>
+        <p className="mt-2 text-sm font-semibold text-neutral-900">{t.tawkTitle}</p>
         <input
           name="tawk_src"
           defaultValue={tawkSrc}
-          placeholder="https://embed.tawk.to/<propertyId>/<widgetId>"
-          className="h-10 w-full rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900"
+          placeholder={t.tawkPh}
+          className={inputClass}
         />
-        <p className="text-xs text-neutral-500">
-          Paste the Widget embed URL from Tawk.to → Administration → Channels →
-          Chat Widget. When set, a floating chat bubble shows on the storefront
-          and the “Support” tab opens it.
-        </p>
+        <p className="text-xs text-neutral-500">{t.tawkHint}</p>
 
-        <p className="mt-2 text-sm font-semibold text-neutral-900">
-          Fallback chat link (optional)
-        </p>
+        <p className="mt-2 text-sm font-semibold text-neutral-900">{t.fallbackChat}</p>
         <input
           name="support_chat_url"
           defaultValue={supportChatUrl}
-          placeholder="https://t.me/… / https://wa.me/… / QQ link"
-          className="h-10 w-full rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900"
+          placeholder={t.fallbackChatPh}
+          className={inputClass}
         />
-        <p className="text-xs text-neutral-500">
-          Used only when Tawk.to above is empty. Leave both blank to show a
-          “coming soon” message.
-        </p>
+        <p className="text-xs text-neutral-500">{t.fallbackChatHint}</p>
 
-        <p className="mt-2 text-sm font-semibold text-neutral-900">
-          WhatsApp button (optional)
-        </p>
+        <p className="mt-2 text-sm font-semibold text-neutral-900">{t.whatsappTitle}</p>
         <input
           name="whatsapp_url"
           defaultValue={whatsappUrl}
-          placeholder="https://wa.me/447700900000?text=Hi"
-          className="h-10 w-full rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900"
+          placeholder={t.whatsappPh}
+          className={inputClass}
         />
-        <p className="text-xs text-neutral-500">
-          When set, a green WhatsApp button floats on the storefront (bottom-left,
-          next to the chat bubble). Format: https://wa.me/&lt;country code+number,
-          no “+” or spaces&gt;. This works alongside Tawk.to.
-        </p>
+        <p className="text-xs text-neutral-500">{t.whatsappHint}</p>
       </ActionForm>
     </main>
   );

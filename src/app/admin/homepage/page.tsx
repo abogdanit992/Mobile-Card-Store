@@ -1,13 +1,15 @@
-import Link from "next/link";
 import { adminHref } from "@/lib/admin-url";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ActionForm } from "@/components/admin/action-form";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { getAdminTranslations } from "@/lib/i18n/admin-server";
 import { updateHomeContentAction } from "./actions";
 
 const inputClass =
   "h-10 w-full rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900";
 
 export default async function AdminHomepageContentPage() {
+  const { locale, t } = await getAdminTranslations();
   const backHref = await adminHref("/admin");
   const supabase = await createSupabaseServerClient();
   const { data: rows } = await supabase
@@ -34,33 +36,32 @@ export default async function AdminHomepageContentPage() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-neutral-50 px-4 py-6">
-      <Link href={backHref} className="text-sm text-neutral-500">
-        ← Back to admin
-      </Link>
-      <h1 className="mt-1 text-2xl font-semibold text-neutral-900">Homepage Content</h1>
-      <p className="text-sm text-neutral-500">
-        Header tagline and the VIP hero banner on the storefront home. Leave a
-        field blank to use the built-in default.
-      </p>
+      <AdminPageHeader
+        locale={locale}
+        backHref={backHref}
+        backLabel={t.backToAdmin}
+        title={t.homepageTitle}
+        subtitle={t.homepageSubtitle}
+      />
 
       <ActionForm
         action={updateHomeContentAction}
         className="mt-4 space-y-3 rounded-2xl border border-neutral-200 bg-white p-4"
         buttonClassName="h-10 w-full rounded-lg bg-neutral-900 text-sm font-semibold text-white"
-        submitLabel="Save content"
-        pendingLabel="Saving…"
+        submitLabel={t.saveContent}
+        pendingLabel={t.saving}
       >
-        <p className="text-sm font-semibold text-neutral-900">Header tagline</p>
+        <p className="text-sm font-semibold text-neutral-900">{t.headerTagline}</p>
         <input
           name="home_tagline_en"
           defaultValue={str("home_tagline_en")}
-          placeholder="Tagline (EN) — e.g. Private activation · Instant delivery"
+          placeholder={t.taglineEnPh}
           className={inputClass}
         />
         <input
           name="home_tagline_zh"
           defaultValue={str("home_tagline_zh")}
-          placeholder="标语 (中文)"
+          placeholder={t.taglineZhPh}
           className={inputClass}
         />
 
@@ -72,49 +73,49 @@ export default async function AdminHomepageContentPage() {
               defaultChecked={heroEnabled}
               className="h-4 w-4"
             />
-            Show VIP hero banner
+            {t.showVipHero}
           </label>
         </div>
 
-        <p className="mt-2 text-sm font-semibold text-neutral-900">Hero — eyebrow (small label)</p>
+        <p className="mt-2 text-sm font-semibold text-neutral-900">{t.heroEyebrow}</p>
         <input
           name="home_hero_eyebrow_en"
           defaultValue={str("home_hero_eyebrow_en")}
-          placeholder="EN — e.g. Members Only"
+          placeholder={t.heroEyebrowEnPh}
           className={inputClass}
         />
         <input
           name="home_hero_eyebrow_zh"
           defaultValue={str("home_hero_eyebrow_zh")}
-          placeholder="中文 — 例：会员专区"
+          placeholder={t.heroEyebrowZhPh}
           className={inputClass}
         />
 
-        <p className="mt-2 text-sm font-semibold text-neutral-900">Hero — title</p>
+        <p className="mt-2 text-sm font-semibold text-neutral-900">{t.heroTitle}</p>
         <input
           name="home_hero_title_en"
           defaultValue={str("home_hero_title_en")}
-          placeholder="EN — e.g. Limited VIP Card Zone"
+          placeholder={t.heroTitleEnPh}
           className={inputClass}
         />
         <input
           name="home_hero_title_zh"
           defaultValue={str("home_hero_title_zh")}
-          placeholder="中文 — 例：限时 VIP 卡密专区"
+          placeholder={t.heroTitleZhPh}
           className={inputClass}
         />
 
-        <p className="mt-2 text-sm font-semibold text-neutral-900">Hero — description</p>
+        <p className="mt-2 text-sm font-semibold text-neutral-900">{t.heroDesc}</p>
         <input
           name="home_hero_desc_en"
           defaultValue={str("home_hero_desc_en")}
-          placeholder="EN — e.g. Pay & receive instantly · 24h delivery"
+          placeholder={t.heroDescEnPh}
           className={inputClass}
         />
         <input
           name="home_hero_desc_zh"
           defaultValue={str("home_hero_desc_zh")}
-          placeholder="中文 — 例：付款即发卡 · 24h 自动交付"
+          placeholder={t.heroDescZhPh}
           className={inputClass}
         />
       </ActionForm>

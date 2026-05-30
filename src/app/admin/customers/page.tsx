@@ -1,6 +1,7 @@
-import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { adminHref } from "@/lib/admin-url";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { getAdminTranslations } from "@/lib/i18n/admin-server";
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat("en-US", {
@@ -11,9 +12,11 @@ function formatPrice(value: number) {
 }
 
 export default async function AdminCustomersPage() {
+  const { locale, t } = await getAdminTranslations();
   const backHref = await adminHref("/admin");
   const exportHref = await adminHref("/admin/customers/export");
   const supabase = await createSupabaseServerClient();
+  const dateLocale = locale === "zh" ? "zh-CN" : "en-US";
 
   const { data: customers, error } = await supabase
     .from("customers")
@@ -27,26 +30,26 @@ export default async function AdminCustomersPage() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-neutral-50 px-4 py-6">
-      <Link href={backHref} className="text-sm text-neutral-500">
-        ← Back to admin
-      </Link>
-      <h1 className="mt-1 text-2xl font-semibold text-neutral-900">Customers</h1>
-      <p className="text-sm text-neutral-500">
-        Built from paid orders. Use for mass campaigns.
-      </p>
+      <AdminPageHeader
+        locale={locale}
+        backHref={backHref}
+        backLabel={t.backToAdmin}
+        title={t.customersTitle}
+        subtitle={t.customersSubtitle}
+      />
 
       <div className="mt-4 grid grid-cols-3 gap-2 text-center">
         <div className="rounded-xl border border-neutral-200 bg-white p-3">
           <p className="text-lg font-bold text-neutral-900">{totalCustomers}</p>
-          <p className="text-[10px] text-neutral-500">Total</p>
+          <p className="text-[10px] text-neutral-500">{t.statTotal}</p>
         </div>
         <div className="rounded-xl border border-neutral-200 bg-white p-3">
           <p className="text-lg font-bold text-neutral-900">{withEmail}</p>
-          <p className="text-[10px] text-neutral-500">Email</p>
+          <p className="text-[10px] text-neutral-500">{t.statEmail}</p>
         </div>
         <div className="rounded-xl border border-neutral-200 bg-white p-3">
           <p className="text-lg font-bold text-neutral-900">{withPhone}</p>
-          <p className="text-[10px] text-neutral-500">Phone</p>
+          <p className="text-[10px] text-neutral-500">{t.statPhone}</p>
         </div>
       </div>
 
@@ -54,12 +57,12 @@ export default async function AdminCustomersPage() {
         href={exportHref}
         className="mt-3 block h-10 rounded-lg bg-neutral-900 text-center text-sm font-semibold leading-10 text-white"
       >
-        Export CSV
+        {t.exportCsv}
       </a>
 
       {error ? (
         <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
-          {error.message}
+          {t.loadFailed}: {error.message}
         </p>
       ) : null}
 
@@ -74,15 +77,15 @@ export default async function AdminCustomersPage() {
             </p>
             <p className="text-xs text-neutral-500">{c.phone ?? "—"}</p>
             <p className="mt-1 text-xs text-neutral-700">
-              {c.order_count} orders · {formatPrice(Number(c.total_spent))}
+              {c.order_count} {t.ordersCount} · {formatPrice(Number(c.total_spent))}
               {c.last_order_at
-                ? ` · ${new Date(c.last_order_at).toLocaleDateString("en-US")}`
+                ? ` · ${new Date(c.last_order_at).toLocaleDateString(dateLocale)}`
                 : ""}
             </p>
           </div>
         ))}
         {totalCustomers === 0 ? (
-          <p className="text-sm text-neutral-500">No customers yet.</p>
+          <p className="text-sm text-neutral-500">{t.empty}</p>
         ) : null}
       </section>
     </main>

@@ -1,7 +1,8 @@
-import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { adminHref } from "@/lib/admin-url";
 import { ActionForm } from "@/components/admin/action-form";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { getAdminTranslations } from "@/lib/i18n/admin-server";
 import {
   createCategoryAction,
   deleteCategoryAction,
@@ -13,6 +14,7 @@ const inputClass =
   "h-10 w-full rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900";
 
 export default async function AdminCategoriesPage() {
+  const { locale, t } = await getAdminTranslations();
   const backHref = await adminHref("/admin");
   const supabase = await createSupabaseServerClient();
   const { data: categories, error } = await supabase
@@ -22,37 +24,39 @@ export default async function AdminCategoriesPage() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-neutral-50 px-4 py-6">
-      <Link href={backHref} className="text-sm text-neutral-500">
-        ← Back to admin
-      </Link>
-      <h1 className="mt-1 text-2xl font-semibold text-neutral-900">Categories</h1>
-      <p className="text-sm text-neutral-500">Storefront sections / box brands</p>
+      <AdminPageHeader
+        locale={locale}
+        backHref={backHref}
+        backLabel={t.backToAdmin}
+        title={t.categoriesTitle}
+        subtitle={t.categoriesSubtitle}
+      />
 
       <ActionForm
         action={createCategoryAction}
         resetOnSuccess
         className="mt-4 space-y-2 rounded-2xl border border-neutral-200 bg-white p-4"
         buttonClassName="h-10 w-full rounded-lg bg-neutral-900 text-sm font-semibold text-white"
-        submitLabel="Add category"
-        pendingLabel="Adding…"
+        submitLabel={t.addCategory}
+        pendingLabel={t.adding}
       >
-        <h2 className="text-sm font-semibold text-neutral-900">New category</h2>
-        <input name="name_en" placeholder="Name (EN) *" className={inputClass} required />
-        <input name="name_zh" placeholder="名称 (中文)" className={inputClass} />
-        <input name="slug" placeholder="slug (optional)" className={inputClass} />
-        <input name="icon_url" placeholder="Icon URL" className={inputClass} />
+        <h2 className="text-sm font-semibold text-neutral-900">{t.newCategory}</h2>
+        <input name="name_en" placeholder={t.nameEn} className={inputClass} required />
+        <input name="name_zh" placeholder={t.nameZh} className={inputClass} />
+        <input name="slug" placeholder={t.slugOptional} className={inputClass} />
+        <input name="icon_url" placeholder={t.iconUrl} className={inputClass} />
         <input
           name="sort_order"
           type="number"
           defaultValue={0}
-          placeholder="Sort order"
+          placeholder={t.sortOrder}
           className={inputClass}
         />
       </ActionForm>
 
       {error ? (
         <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
-          {error.message}
+          {t.loadFailed}: {error.message}
         </p>
       ) : null}
 
@@ -66,8 +70,8 @@ export default async function AdminCategoriesPage() {
               action={updateCategoryAction}
               className="space-y-2"
               buttonClassName="h-9 w-full rounded-lg bg-neutral-900 text-sm font-semibold text-white"
-              submitLabel="Save"
-              pendingLabel="Saving…"
+              submitLabel={t.save}
+              pendingLabel={t.saving}
             >
               <input type="hidden" name="id" value={c.id} />
               <div className="flex items-center justify-between">
@@ -79,7 +83,7 @@ export default async function AdminCategoriesPage() {
                       : "bg-neutral-200 text-neutral-500"
                   }`}
                 >
-                  {c.active ? "ACTIVE" : "HIDDEN"}
+                  {c.active ? t.active : t.hidden}
                 </span>
               </div>
               <input
@@ -91,13 +95,13 @@ export default async function AdminCategoriesPage() {
               <input
                 name="name_zh"
                 defaultValue={c.name_zh ?? ""}
-                placeholder="中文名"
+                placeholder={t.nameZhShort}
                 className={inputClass}
               />
               <input
                 name="icon_url"
                 defaultValue={c.icon_url ?? ""}
-                placeholder="Icon URL"
+                placeholder={t.iconUrl}
                 className={inputClass}
               />
               <input
@@ -116,8 +120,8 @@ export default async function AdminCategoriesPage() {
                     ? "border-amber-300 text-amber-700"
                     : "border-emerald-300 text-emerald-700"
                 }`}
-                submitLabel={c.active ? "Hide from store" : "Show on store"}
-                pendingLabel="…"
+                submitLabel={c.active ? t.hideFromStore : t.showOnStore}
+                pendingLabel={t.pending}
               >
                 <input type="hidden" name="id" value={c.id} />
                 <input type="hidden" name="nextActive" value={String(!c.active)} />
@@ -126,9 +130,9 @@ export default async function AdminCategoriesPage() {
                 action={deleteCategoryAction}
                 className="flex-1"
                 buttonClassName="h-9 w-full rounded-lg border border-red-300 text-xs font-semibold text-red-600"
-                submitLabel="Delete"
-                pendingLabel="Deleting…"
-                confirm="Delete this category? This cannot be undone."
+                submitLabel={t.delete}
+                pendingLabel={t.deleting}
+                confirm={t.confirmDeleteCategory}
               >
                 <input type="hidden" name="id" value={c.id} />
               </ActionForm>

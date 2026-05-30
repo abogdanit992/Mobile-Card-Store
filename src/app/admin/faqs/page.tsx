@@ -1,7 +1,8 @@
-import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { adminHref } from "@/lib/admin-url";
 import { ActionForm } from "@/components/admin/action-form";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { getAdminTranslations } from "@/lib/i18n/admin-server";
 import {
   createFaqAction,
   deleteFaqAction,
@@ -15,6 +16,7 @@ const areaClass =
   "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900";
 
 export default async function AdminFaqsPage() {
+  const { locale, t } = await getAdminTranslations();
   const backHref = await adminHref("/admin");
   const supabase = await createSupabaseServerClient();
   const { data: faqs, error } = await supabase
@@ -24,37 +26,45 @@ export default async function AdminFaqsPage() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-neutral-50 px-4 py-6">
-      <Link href={backHref} className="text-sm text-neutral-500">
-        ← Back to admin
-      </Link>
-      <h1 className="mt-1 text-2xl font-semibold text-neutral-900">FAQ</h1>
-      <p className="text-sm text-neutral-500">Shown on the storefront /faq page</p>
+      <AdminPageHeader
+        locale={locale}
+        backHref={backHref}
+        backLabel={t.backToAdmin}
+        title={t.faqsTitle}
+        subtitle={t.faqsSubtitle}
+      />
 
       <ActionForm
         action={createFaqAction}
         resetOnSuccess
         className="mt-4 space-y-2 rounded-2xl border border-neutral-200 bg-white p-4"
         buttonClassName="h-10 w-full rounded-lg bg-neutral-900 text-sm font-semibold text-white"
-        submitLabel="Add FAQ"
-        pendingLabel="Adding…"
+        submitLabel={t.addFaq}
+        pendingLabel={t.adding}
       >
-        <h2 className="text-sm font-semibold text-neutral-900">New FAQ</h2>
-        <input name="question_en" placeholder="Question (EN) *" className={inputClass} required />
-        <input name="question_zh" placeholder="问题 (中文)" className={inputClass} />
+        <h2 className="text-sm font-semibold text-neutral-900">{t.newFaq}</h2>
+        <input name="question_en" placeholder={t.questionEn} className={inputClass} required />
+        <input name="question_zh" placeholder={t.questionZh} className={inputClass} />
         <textarea
           name="answer_en"
           rows={3}
-          placeholder="Answer (EN) *"
+          placeholder={t.answerEn}
           className={areaClass}
           required
         />
-        <textarea name="answer_zh" rows={3} placeholder="答案 (中文)" className={areaClass} />
-        <input name="sort_order" type="number" defaultValue={0} className={inputClass} />
+        <textarea name="answer_zh" rows={3} placeholder={t.answerZh} className={areaClass} />
+        <input
+          name="sort_order"
+          type="number"
+          defaultValue={0}
+          placeholder={t.sortOrder}
+          className={inputClass}
+        />
       </ActionForm>
 
       {error ? (
         <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
-          {error.message}
+          {t.loadFailed}: {error.message}
         </p>
       ) : null}
 
@@ -65,8 +75,8 @@ export default async function AdminFaqsPage() {
               action={updateFaqAction}
               className="space-y-2"
               buttonClassName="h-9 w-full rounded-lg bg-neutral-900 text-sm font-semibold text-white"
-              submitLabel="Save"
-              pendingLabel="Saving…"
+              submitLabel={t.save}
+              pendingLabel={t.saving}
             >
               <input type="hidden" name="id" value={f.id} />
               <div className="flex items-center justify-end">
@@ -77,7 +87,7 @@ export default async function AdminFaqsPage() {
                       : "bg-neutral-200 text-neutral-500"
                   }`}
                 >
-                  {f.active ? "ACTIVE" : "HIDDEN"}
+                  {f.active ? t.active : t.hidden}
                 </span>
               </div>
               <input
@@ -89,13 +99,14 @@ export default async function AdminFaqsPage() {
               <input
                 name="question_zh"
                 defaultValue={f.question_zh ?? ""}
-                placeholder="问题 (中文)"
+                placeholder={t.questionZh}
                 className={inputClass}
               />
               <textarea
                 name="answer_en"
                 rows={3}
                 defaultValue={f.answer_en}
+                placeholder={t.answerEn}
                 className={areaClass}
                 required
               />
@@ -103,13 +114,14 @@ export default async function AdminFaqsPage() {
                 name="answer_zh"
                 rows={3}
                 defaultValue={f.answer_zh ?? ""}
-                placeholder="答案 (中文)"
+                placeholder={t.answerZh}
                 className={areaClass}
               />
               <input
                 name="sort_order"
                 type="number"
                 defaultValue={f.sort_order}
+                placeholder={t.sortOrder}
                 className={inputClass}
               />
             </ActionForm>
@@ -122,8 +134,8 @@ export default async function AdminFaqsPage() {
                     ? "border-amber-300 text-amber-700"
                     : "border-emerald-300 text-emerald-700"
                 }`}
-                submitLabel={f.active ? "Hide from store" : "Show on store"}
-                pendingLabel="…"
+                submitLabel={f.active ? t.hideFromStore : t.showOnStore}
+                pendingLabel={t.pending}
               >
                 <input type="hidden" name="id" value={f.id} />
                 <input type="hidden" name="nextActive" value={String(!f.active)} />
@@ -132,9 +144,9 @@ export default async function AdminFaqsPage() {
                 action={deleteFaqAction}
                 className="flex-1"
                 buttonClassName="h-9 w-full rounded-lg border border-red-300 text-xs font-semibold text-red-600"
-                submitLabel="Delete"
-                pendingLabel="Deleting…"
-                confirm="Delete this FAQ? This cannot be undone."
+                submitLabel={t.delete}
+                pendingLabel={t.deleting}
+                confirm={t.confirmDeleteFaq}
               >
                 <input type="hidden" name="id" value={f.id} />
               </ActionForm>
