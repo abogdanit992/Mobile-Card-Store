@@ -112,7 +112,7 @@ export function UsdtPaymentPanel({
     }
 
     poll();
-    const interval = window.setInterval(poll, 5000);
+    const interval = window.setInterval(poll, 3000);
     return () => {
       cancelled = true;
       window.clearInterval(interval);
