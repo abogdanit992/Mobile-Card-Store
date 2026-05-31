@@ -7,6 +7,8 @@ import { createDirectUsdtPayment } from "./direct-usdt";
 import { createNowPaymentsPayment } from "./nowpayments";
 import { createStripePayment } from "./stripe";
 import { createPaypalPayment } from "./paypal";
+import { createWechatPersonalPayment } from "./wechat";
+import { createAlipayPersonalPayment } from "./alipay";
 import { sendCardEmail } from "@/lib/email/send";
 
 type AdminClient = SupabaseClient<Database>;
@@ -25,6 +27,34 @@ export async function getEnabledChannelConfig(
   return (data.config ?? {}) as ChannelConfig;
 }
 
+/** Resolve PayPal REST credentials for personal, business, or legacy rows. */
+export async function getPaypalChannelConfig(
+  admin: AdminClient,
+  provider: string,
+): Promise<ChannelConfig | null> {
+  if (provider === "paypal_personal" || provider === "paypal_business") {
+    return getEnabledChannelConfig(admin, provider);
+  }
+  return (
+    (await getChannelConfig(admin, "paypal_business")) ??
+    (await getChannelConfig(admin, "paypal"))
+  );
+}
+
+async function getChannelConfig(
+  admin: AdminClient,
+  provider: Provider,
+): Promise<ChannelConfig | null> {
+  const { data } = await admin
+    .from("payment_channels")
+    .select("config,enabled")
+    .eq("provider", provider)
+    .maybeSingle();
+
+  if (!data?.config) return null;
+  return (data.config ?? {}) as ChannelConfig;
+}
+
 export async function createProviderPayment(params: CreatePaymentParams) {
   switch (params.provider) {
     case "cryptomus":
@@ -34,7 +64,13 @@ export async function createProviderPayment(params: CreatePaymentParams) {
     case "stripe":
       return createStripePayment(params);
     case "paypal":
+    case "paypal_personal":
+    case "paypal_business":
       return createPaypalPayment(params);
+    case "wechat_personal":
+      return createWechatPersonalPayment(params);
+    case "alipay_personal":
+      return createAlipayPersonalPayment(params);
     case "direct_usdt":
       return createDirectUsdtPayment(params);
     default:

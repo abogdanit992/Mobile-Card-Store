@@ -13,6 +13,7 @@ import {
   getEnabledChannelConfig,
 } from "@/lib/payments/service";
 import type { Provider } from "@/lib/payments/types";
+import { ALL_PROVIDERS } from "@/lib/payments/types";
 
 type CreateBody = {
   productId?: string;
@@ -26,13 +27,7 @@ function isValidEmail(email: string) {
 }
 
 function isProvider(value: unknown): value is Provider {
-  return (
-    value === "cryptomus" ||
-    value === "nowpayments" ||
-    value === "stripe" ||
-    value === "paypal" ||
-    value === "direct_usdt"
-  );
+  return typeof value === "string" && ALL_PROVIDERS.includes(value as Provider);
 }
 
 async function getOrigin() {

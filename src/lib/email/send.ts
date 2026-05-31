@@ -16,7 +16,7 @@ export async function sendCardEmail(params: CardEmailParams): Promise<void> {
   const from = process.env.EMAIL_FROM;
   if (!apiKey || !from || !params.to) return;
 
-  const lookupUrl = `${params.siteUrl}/cards?orderId=${params.orderId}`;
+  const lookupUrl = `${params.siteUrl}/cards?orderId=${encodeURIComponent(params.orderId)}&email=${encodeURIComponent(params.to)}`;
   const html = `
     <div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto">
       <h2 style="color:#111">${params.productName}</h2>

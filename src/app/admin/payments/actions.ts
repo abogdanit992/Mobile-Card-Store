@@ -12,7 +12,30 @@ function read(formData: FormData, key: string) {
 const CONFIG_KEYS: Record<string, string[]> = {
   cryptomus: ["merchant_id", "payment_api_key"],
   nowpayments: ["api_key", "ipn_secret"],
-  stripe: ["secret_key", "webhook_secret"],
+  stripe: ["secret_key", "webhook_secret", "publishable_key"],
+  wechat_personal: [
+    "app_id",
+    "mch_id",
+    "api_v3_key",
+    "cert_serial_no",
+    "mode",
+    "account_note",
+  ],
+  alipay_personal: [
+    "app_id",
+    "seller_id",
+    "private_key",
+    "alipay_public_key",
+    "mode",
+  ],
+  paypal_personal: ["client_id", "client_secret", "mode", "account_email"],
+  paypal_business: [
+    "client_id",
+    "client_secret",
+    "mode",
+    "business_email",
+    "webhook_id",
+  ],
   paypal: ["client_id", "client_secret", "mode"],
   direct_usdt: ["wallet_address", "tron_api_key", "usdt_contract", "expire_minutes"],
 };

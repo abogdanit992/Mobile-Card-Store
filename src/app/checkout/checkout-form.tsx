@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { PrimaryButton } from "@/components/primary-button";
 
-type Provider = "cryptomus" | "nowpayments" | "stripe" | "paypal" | "direct_usdt";
+import type { Provider } from "@/lib/payments/types";
 
 type ChannelOption = {
   provider: Provider;
@@ -36,13 +36,21 @@ type CheckoutFormProps = {
   labels: CheckoutLabels;
 };
 
-const PROVIDER_ICON: Record<Provider, string> = {
+const PROVIDER_ICON: Partial<Record<Provider, string>> = {
   cryptomus: "₿",
   nowpayments: "🪙",
   stripe: "💳",
   paypal: "🅿️",
+  paypal_personal: "🅿️",
+  paypal_business: "🏢",
   direct_usdt: "💵",
+  wechat_personal: "💬",
+  alipay_personal: "🔵",
 };
+
+function providerIcon(provider: Provider): string {
+  return PROVIDER_ICON[provider] ?? "💰";
+}
 
 export function CheckoutForm({
   productId,
@@ -157,7 +165,7 @@ export function CheckoutForm({
                     : "border-[var(--border)] text-[var(--muted)] hover:text-white"
                 }`}
               >
-                <span className="text-lg">{PROVIDER_ICON[ch.provider]}</span>
+                <span className="text-lg">{providerIcon(ch.provider)}</span>
                 <span className="flex-1">{ch.label}</span>
                 <span
                   className={`h-4 w-4 rounded-full border ${

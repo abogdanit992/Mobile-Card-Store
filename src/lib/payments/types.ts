@@ -3,7 +3,23 @@ export type Provider =
   | "nowpayments"
   | "stripe"
   | "paypal"
-  | "direct_usdt";
+  | "paypal_personal"
+  | "paypal_business"
+  | "direct_usdt"
+  | "wechat_personal"
+  | "alipay_personal";
+
+export const ALL_PROVIDERS: readonly Provider[] = [
+  "cryptomus",
+  "nowpayments",
+  "stripe",
+  "paypal",
+  "paypal_personal",
+  "paypal_business",
+  "direct_usdt",
+  "wechat_personal",
+  "alipay_personal",
+];
 
 export type ChannelConfig = Record<string, string>;
 

@@ -6,7 +6,7 @@ import {
 } from "@/lib/payments/paypal";
 import {
   fulfillPaidOrder,
-  getEnabledChannelConfig,
+  getPaypalChannelConfig,
 } from "@/lib/payments/service";
 import { MobileShell } from "@/components/mobile-shell";
 import { StoreHeader } from "@/components/store-header";
@@ -50,11 +50,15 @@ export default async function PaymentReturnPage({ searchParams }: ReturnPageProp
     redirect(`/payment/usdt?orderId=${orderId}`);
   }
 
-  // PayPal: capture on return
-  if (payment?.provider === "paypal" && payment.status !== "paid") {
+  // PayPal (personal / business / legacy): capture on return
+  if (
+    payment?.provider &&
+    ["paypal", "paypal_personal", "paypal_business"].includes(payment.provider) &&
+    payment.status !== "paid"
+  ) {
     const paypalOrderId = token ?? payment.provider_payment_id ?? undefined;
     if (paypalOrderId) {
-      const config = await getEnabledChannelConfig(admin, "paypal");
+      const config = await getPaypalChannelConfig(admin, payment.provider);
       if (config) {
         try {
           const captured = await capturePaypalOrder(config, paypalOrderId);
