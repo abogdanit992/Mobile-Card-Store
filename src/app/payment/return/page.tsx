@@ -8,6 +8,7 @@ import {
   fulfillPaidOrder,
   getPaypalChannelConfig,
 } from "@/lib/payments/service";
+import { syncItxtPaymentIfPending, isItxtProvider } from "@/lib/payments/itxt-sync";
 import { MobileShell } from "@/components/mobile-shell";
 import { StoreHeader } from "@/components/store-header";
 import { getTranslations } from "@/lib/i18n/server";
@@ -48,6 +49,13 @@ export default async function PaymentReturnPage({ searchParams }: ReturnPageProp
 
   if (payment?.provider === "direct_usdt") {
     redirect(`/payment/usdt?orderId=${orderId}`);
+  }
+
+  if (payment?.provider && isItxtProvider(payment.provider) && payment.status !== "paid") {
+    const synced = await syncItxtPaymentIfPending(admin, orderId);
+    if (synced === "paid") {
+      redirect(`/cards?orderId=${orderId}`);
+    }
   }
 
   // PayPal (personal / business / legacy): capture on return

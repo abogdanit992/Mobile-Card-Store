@@ -149,6 +149,11 @@ export async function POST(request: Request) {
   }
 
   const origin = await getOrigin();
+  const h = await headers();
+  const clientIp =
+    h.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    h.get("x-real-ip")?.trim() ??
+    undefined;
 
   try {
     const result = await createProviderPayment({
@@ -163,11 +168,17 @@ export async function POST(request: Request) {
       successUrl: `${origin}/payment/return?orderId=${order.id}`,
       cancelUrl: `${origin}/checkout?productId=${product.id}`,
       callbackUrl: `${origin}/api/payments/webhook/${provider}`,
+      clientIp,
     });
 
     await admin
       .from("payments")
-      .update({ provider_payment_id: result.providerPaymentId ?? null })
+      .update({
+        provider_payment_id: result.providerPaymentId ?? null,
+        raw: result.merchantOrderId
+          ? ({ merOrderTid: result.merchantOrderId } as never)
+          : null,
+      })
       .eq("id", payment.id);
 
     return NextResponse.json({ ok: true, redirectUrl: result.redirectUrl });

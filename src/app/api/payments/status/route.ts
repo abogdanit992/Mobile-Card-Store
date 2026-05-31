@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { processDirectUsdtPayments } from "@/lib/payments/tron-watch";
+import { syncItxtPaymentIfPending, isItxtProvider } from "@/lib/payments/itxt-sync";
 import {
   checkRateLimit,
   clientIpFromHeaders,
@@ -58,6 +59,14 @@ export async function GET(request: Request) {
 
   if (payment?.provider === "direct_usdt" && payment.status === "pending") {
     await processDirectUsdtPayments();
+  }
+
+  if (
+    payment?.provider &&
+    isItxtProvider(payment.provider) &&
+    payment.status === "pending"
+  ) {
+    await syncItxtPaymentIfPending(admin, orderId);
   }
 
   const { data: refreshed } = await admin

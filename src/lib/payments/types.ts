@@ -6,8 +6,8 @@ export type Provider =
   | "paypal_personal"
   | "paypal_business"
   | "direct_usdt"
-  | "wechat_personal"
-  | "alipay_personal";
+  | "wechat"
+  | "alipay";
 
 export const ALL_PROVIDERS: readonly Provider[] = [
   "cryptomus",
@@ -17,8 +17,8 @@ export const ALL_PROVIDERS: readonly Provider[] = [
   "paypal_personal",
   "paypal_business",
   "direct_usdt",
-  "wechat_personal",
-  "alipay_personal",
+  "wechat",
+  "alipay",
 ];
 
 export type ChannelConfig = Record<string, string>;
@@ -35,6 +35,14 @@ export type CreatePaymentParams = {
   successUrl: string;
   cancelUrl: string;
   callbackUrl: string;
+  /** Buyer IP forwarded from checkout (optional gateway field). */
+  clientIp?: string;
+};
+
+export type WebhookResult = {
+  providerPaymentId: string | null;
+  orderId: string | null;
+  status: "paid" | "failed" | "expired" | "cancelled" | "pending";
 };
 
 export type CreatePaymentResult = {
@@ -42,10 +50,6 @@ export type CreatePaymentResult = {
   redirectUrl: string;
   /** Provider-side payment/invoice id, if available immediately. */
   providerPaymentId?: string;
-};
-
-export type WebhookResult = {
-  providerPaymentId: string | null;
-  orderId: string | null;
-  status: "paid" | "failed" | "expired" | "cancelled" | "pending";
+  /** Gateway merchant order id (merOrderTid) for async lookup. */
+  merchantOrderId?: string;
 };

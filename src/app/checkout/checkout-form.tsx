@@ -44,8 +44,8 @@ const PROVIDER_ICON: Partial<Record<Provider, string>> = {
   paypal_personal: "🅿️",
   paypal_business: "🏢",
   direct_usdt: "💵",
-  wechat_personal: "💬",
-  alipay_personal: "🔵",
+  wechat: "💬",
+  alipay: "🔵",
 };
 
 function providerIcon(provider: Provider): string {

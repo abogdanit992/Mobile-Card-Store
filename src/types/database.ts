@@ -230,8 +230,8 @@ export type Database = {
             | "paypal_personal"
             | "paypal_business"
             | "direct_usdt"
-            | "wechat_personal"
-            | "alipay_personal";
+            | "wechat"
+            | "alipay";
           label_en: string;
           label_zh: string | null;
           enabled: boolean;
@@ -249,8 +249,8 @@ export type Database = {
             | "paypal_personal"
             | "paypal_business"
             | "direct_usdt"
-            | "wechat_personal"
-            | "alipay_personal";
+            | "wechat"
+            | "alipay";
           label_en: string;
           label_zh?: string | null;
           enabled?: boolean;
@@ -538,8 +538,8 @@ export type Database = {
             | "paypal_personal"
             | "paypal_business"
             | "direct_usdt"
-            | "wechat_personal"
-            | "alipay_personal";
+            | "wechat"
+            | "alipay";
           label_en: string;
           label_zh: string | null;
           enabled: boolean;

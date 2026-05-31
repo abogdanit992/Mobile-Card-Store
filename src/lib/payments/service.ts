@@ -7,8 +7,8 @@ import { createDirectUsdtPayment } from "./direct-usdt";
 import { createNowPaymentsPayment } from "./nowpayments";
 import { createStripePayment } from "./stripe";
 import { createPaypalPayment } from "./paypal";
-import { createWechatPersonalPayment } from "./wechat";
-import { createAlipayPersonalPayment } from "./alipay";
+import { createWechatPayment } from "./wechat";
+import { createAlipayPayment } from "./alipay";
 import { sendCardEmail } from "@/lib/email/send";
 
 type AdminClient = SupabaseClient<Database>;
@@ -55,6 +55,14 @@ async function getChannelConfig(
   return (data.config ?? {}) as ChannelConfig;
 }
 
+/** Config for webhooks (ignores enabled flag — order may complete after admin disables channel). */
+export async function getPaymentChannelConfig(
+  admin: AdminClient,
+  provider: Provider,
+): Promise<ChannelConfig | null> {
+  return getChannelConfig(admin, provider);
+}
+
 export async function createProviderPayment(params: CreatePaymentParams) {
   switch (params.provider) {
     case "cryptomus":
@@ -67,10 +75,10 @@ export async function createProviderPayment(params: CreatePaymentParams) {
     case "paypal_personal":
     case "paypal_business":
       return createPaypalPayment(params);
-    case "wechat_personal":
-      return createWechatPersonalPayment(params);
-    case "alipay_personal":
-      return createAlipayPersonalPayment(params);
+    case "wechat":
+      return createWechatPayment(params);
+    case "alipay":
+      return createAlipayPayment(params);
     case "direct_usdt":
       return createDirectUsdtPayment(params);
     default:

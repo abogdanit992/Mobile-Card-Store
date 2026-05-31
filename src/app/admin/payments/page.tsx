@@ -20,20 +20,39 @@ const CONFIG_FIELDS: Record<string, { key: string; label: string; secret?: boole
     { key: "webhook_secret", label: "Webhook Secret (whsec_…)", secret: true },
     { key: "publishable_key", label: "Publishable Key (pk_…, optional)" },
   ],
-  wechat_personal: [
-    { key: "app_id", label: "App ID (应用 ID)" },
-    { key: "mch_id", label: "Merchant ID / 商户号" },
-    { key: "api_v3_key", label: "API v3 Key", secret: true },
-    { key: "cert_serial_no", label: "Certificate serial no." },
-    { key: "mode", label: "Mode (sandbox | live)" },
-    { key: "account_note", label: "Personal account note (optional)" },
+  wechat: [
+    { key: "mid", label: "商户号 mid" },
+    { key: "merchant_secret", label: "商户秘钥", secret: true },
+    {
+      key: "api_base_url",
+      label: "API 网关地址（默认 itxt002 域名，含 http://）",
+    },
+    { key: "channel_code", label: "微信通道编码 channelCode（向客服索取）" },
+    {
+      key: "exchange_rate",
+      label: "USD→CNY 汇率（可选；留空则商品价按人民币元提交）",
+    },
+    {
+      key: "callback_ips",
+      label: "回调来源 IP（逗号分隔，留空不校验）",
+    },
   ],
-  alipay_personal: [
-    { key: "app_id", label: "App ID (应用 ID)" },
-    { key: "seller_id", label: "Seller ID / PID (2088…)" },
-    { key: "private_key", label: "App private key (RSA)", secret: true },
-    { key: "alipay_public_key", label: "Alipay public key" },
-    { key: "mode", label: "Mode (sandbox | live)" },
+  alipay: [
+    { key: "mid", label: "商户号 mid" },
+    { key: "merchant_secret", label: "商户秘钥", secret: true },
+    {
+      key: "api_base_url",
+      label: "API 网关地址（默认 itxt002 域名，含 http://）",
+    },
+    { key: "channel_code", label: "支付宝通道编码 channelCode（向客服索取）" },
+    {
+      key: "exchange_rate",
+      label: "USD→CNY 汇率（可选；留空则商品价按人民币元提交）",
+    },
+    {
+      key: "callback_ips",
+      label: "回调来源 IP（逗号分隔，留空不校验）",
+    },
   ],
   paypal_personal: [
     { key: "client_id", label: "Client ID (REST app)" },

@@ -1,0 +1,74 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database";
+import type { Provider } from "./types";
+import { queryItxtPayment } from "./itxt-pay";
+import { fulfillPaidOrder, getEnabledChannelConfig } from "./service";
+
+type AdminClient = SupabaseClient<Database>;
+
+const ITXT_PROVIDERS = new Set<Provider>(["wechat", "alipay"]);
+
+function merOrderTidFromRaw(raw: unknown): string | null {
+  if (!raw || typeof raw !== "object") return null;
+  const v = (raw as Record<string, unknown>).merOrderTid;
+  return typeof v === "string" && v.trim() ? v.trim() : null;
+}
+
+export function isItxtProvider(provider: string): provider is "wechat" | "alipay" {
+  return ITXT_PROVIDERS.has(provider as Provider);
+}
+
+/** Poll gateway and fulfill if paid (used on return page + status API). */
+export async function syncItxtPaymentIfPending(
+  admin: AdminClient,
+  orderId: string,
+): Promise<"paid" | "pending" | "failed"> {
+  const { data: payment } = await admin
+    .from("payments")
+    .select("provider,status,raw,provider_payment_id")
+    .eq("order_id", orderId)
+    .maybeSingle();
+
+  if (!payment || payment.status === "paid") {
+    return payment?.status === "paid" ? "paid" : "pending";
+  }
+  if (!isItxtProvider(payment.provider)) return "pending";
+
+  const merOrderTid = merOrderTidFromRaw(payment.raw);
+  if (!merOrderTid) return "pending";
+
+  const config = await getEnabledChannelConfig(admin, payment.provider);
+  if (!config) return "pending";
+
+  const result = await queryItxtPayment(config, merOrderTid);
+  if (!result) return "pending";
+
+  await admin
+    .from("payments")
+    .update({
+      raw: {
+        ...(typeof payment.raw === "object" && payment.raw ? payment.raw : {}),
+        merOrderTid,
+        tid: result.tid,
+        payOrderStatus: result.payOrderStatus,
+      } as never,
+      provider_payment_id: result.tid,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("order_id", orderId);
+
+  if (result.payOrderStatus === 1) {
+    await fulfillPaidOrder(orderId, result.tid);
+    return "paid";
+  }
+  if (result.payOrderStatus === 2 || result.payOrderStatus === 3) {
+    await admin.from("payments").update({ status: "failed" }).eq("order_id", orderId);
+    return "failed";
+  }
+  if (result.payOrderStatus === 4) {
+    await admin.from("payments").update({ status: "expired" }).eq("order_id", orderId);
+    return "failed";
+  }
+
+  return "pending";
+}
