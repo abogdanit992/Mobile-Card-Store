@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requireAdminForAction } from "@/lib/auth/require-admin";
 import { uploadImageFile } from "@/lib/storage";
 import type { Database } from "@/types/database";
 import type { ActionResult } from "@/lib/admin/action-result";
@@ -28,7 +28,9 @@ export async function createPlatformAction(
     return { ok: false, message: e instanceof Error ? e.message : "Upload failed." };
   }
 
-  const supabase = await createSupabaseServerClient();
+  const gate = await requireAdminForAction();
+  if (!gate.ok) return gate;
+  const { supabase } = gate;
   const payload: Database["public"]["Tables"]["platform_downloads"]["Insert"] = {
     name_en: nameEn,
     name_zh: read(formData, "name_zh") || null,
@@ -71,7 +73,9 @@ export async function updatePlatformAction(
     return { ok: false, message: e instanceof Error ? e.message : "Upload failed." };
   }
 
-  const supabase = await createSupabaseServerClient();
+  const gate = await requireAdminForAction();
+  if (!gate.ok) return gate;
+  const { supabase } = gate;
   const update: Database["public"]["Tables"]["platform_downloads"]["Update"] = {
     name_en: nameEn,
     name_zh: read(formData, "name_zh") || null,
@@ -103,7 +107,9 @@ export async function togglePlatformAction(
   const nextActive = read(formData, "nextActive") === "true";
   if (!id) return { ok: false, message: "Missing platform id." };
 
-  const supabase = await createSupabaseServerClient();
+  const gate = await requireAdminForAction();
+  if (!gate.ok) return gate;
+  const { supabase } = gate;
   const { error } = await supabase
     .from("platform_downloads")
     .update({ active: nextActive })
@@ -122,7 +128,9 @@ export async function deletePlatformAction(
   const id = read(formData, "id");
   if (!id) return { ok: false, message: "Missing platform id." };
 
-  const supabase = await createSupabaseServerClient();
+  const gate = await requireAdminForAction();
+  if (!gate.ok) return gate;
+  const { supabase } = gate;
   const { error } = await supabase.from("platform_downloads").delete().eq("id", id);
   if (error) return { ok: false, message: `Failed to delete: ${error.message}` };
 

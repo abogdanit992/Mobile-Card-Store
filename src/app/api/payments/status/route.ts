@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
+import { headers } from "next/headers";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { processDirectUsdtPayments } from "@/lib/payments/tron-watch";
+import {
+  checkRateLimit,
+  clientIpFromHeaders,
+} from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -9,6 +14,17 @@ export async function GET(request: Request) {
   const orderId = new URL(request.url).searchParams.get("orderId");
   if (!orderId) {
     return NextResponse.json({ error: "Missing orderId." }, { status: 400 });
+  }
+
+  const h = await headers();
+  const ip = clientIpFromHeaders(h);
+  const allowed = await checkRateLimit({
+    bucket: `pay-status:${ip}`,
+    max: 60,
+    windowMs: 60_000,
+  });
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many requests." }, { status: 429 });
   }
 
   const admin = createSupabaseAdminClient();

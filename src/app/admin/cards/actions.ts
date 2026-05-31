@@ -1,13 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { requireAdmin, requireAdminForAction } from "@/lib/auth/require-admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
 import type { ActionResult } from "@/lib/admin/action-result";
+import { logAdminAudit } from "@/lib/security/audit-log";
 
 type SupabaseServer = Awaited<ReturnType<typeof createSupabaseServerClient>>;
 
-/** Resolve a product from the selected platform (category) + card type. */
 async function resolveProductId(
   supabase: SupabaseServer,
   categoryId: string,
@@ -34,7 +35,6 @@ async function resolveProductId(
   return { id: data[0].id };
 }
 
-/** Split a blob of text into clean, de-duplicated card codes. */
 function parseCodes(raw: string): { codes: string[]; duplicates: number } {
   const seen = new Set<string>();
   const out: string[] = [];
@@ -56,9 +56,12 @@ export async function bulkImportCardsAction(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
-  const supabaseForResolve = await createSupabaseServerClient();
+  const gate = await requireAdminForAction();
+  if (!gate.ok) return gate;
+  const { supabase, email } = gate;
+
   const resolved = await resolveProductId(
-    supabaseForResolve,
+    supabase,
     String(formData.get("categoryId") ?? "").trim(),
     String(formData.get("cardType") ?? "").trim(),
   );
@@ -79,10 +82,6 @@ export async function bulkImportCardsAction(
     return { ok: false, message: "No card codes found. Paste codes or upload a .txt file." };
   }
 
-  const supabase = supabaseForResolve;
-
-  // `cards.code` is UNIQUE — upsert with ignoreDuplicates skips codes that
-  // already exist. Insert in chunks so large files don't hit request limits.
   const CHUNK = 500;
   let imported = 0;
   for (let i = 0; i < codes.length; i += CHUNK) {
@@ -99,6 +98,7 @@ export async function bulkImportCardsAction(
     imported += data?.length ?? 0;
   }
 
+  await logAdminAudit(email, "cards.import", { productId, imported });
   revalidatePath("/admin/cards");
 
   const skipped = codes.length - imported;
@@ -120,10 +120,11 @@ export async function bulkImportCardsAction(
 }
 
 export async function createCardAction(formData: FormData) {
+  const { supabase } = await requireAdmin();
+
   const code = String(formData.get("code") ?? "").trim();
   if (!code) throw new Error("Missing card code.");
 
-  const supabase = await createSupabaseServerClient();
   const resolved = await resolveProductId(
     supabase,
     String(formData.get("categoryId") ?? "").trim(),
@@ -153,13 +154,17 @@ export async function deleteCardAction(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
+  const gate = await requireAdminForAction();
+  if (!gate.ok) return gate;
+  const { supabase, email } = gate;
+
   const id = String(formData.get("id") ?? "").trim();
   if (!id) return { ok: false, message: "Missing card id." };
 
-  const supabase = await createSupabaseServerClient();
   const { error } = await supabase.from("cards").delete().eq("id", id);
   if (error) return { ok: false, message: `Failed to delete: ${error.message}` };
 
+  await logAdminAudit(email, "cards.delete", { id });
   revalidatePath("/admin/cards");
   return { ok: true, message: "Card deleted." };
 }
@@ -168,8 +173,11 @@ export async function clearCardsAction(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
+  const gate = await requireAdminForAction();
+  if (!gate.ok) return gate;
+  const { supabase, email } = gate;
+
   const scope = String(formData.get("scope") ?? "").trim();
-  const supabase = await createSupabaseServerClient();
 
   let query = supabase.from("cards").delete({ count: "exact" });
   if (scope === "used") {
@@ -185,6 +193,7 @@ export async function clearCardsAction(
   const { error, count } = await query;
   if (error) return { ok: false, message: `Failed to clear: ${error.message}` };
 
+  await logAdminAudit(email, "cards.clear", { scope, count });
   revalidatePath("/admin/cards");
   return { ok: true, message: `Cleared ${count ?? 0} card(s).` };
 }

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requireAdminForAction } from "@/lib/auth/require-admin";
 import type { Database } from "@/types/database";
 import type { ActionResult } from "@/lib/admin/action-result";
 
@@ -26,7 +26,9 @@ export async function createCategoryAction(
   if (!nameEn) return { ok: false, message: "English name is required." };
 
   const slug = slugify(slugRaw || nameEn);
-  const supabase = await createSupabaseServerClient();
+  const gate = await requireAdminForAction();
+  if (!gate.ok) return gate;
+  const { supabase } = gate;
   const payload: Database["public"]["Tables"]["categories"]["Insert"] = {
     slug,
     name_en: nameEn,
@@ -58,7 +60,9 @@ export async function updateCategoryAction(
 
   if (!nameEn) return { ok: false, message: "English name is required." };
 
-  const supabase = await createSupabaseServerClient();
+  const gate = await requireAdminForAction();
+  if (!gate.ok) return gate;
+  const { supabase } = gate;
   const update: Database["public"]["Tables"]["categories"]["Update"] = {
     name_en: nameEn,
     name_zh: nameZh || null,
@@ -82,7 +86,9 @@ export async function toggleCategoryAction(
   const nextActive = String(formData.get("nextActive") ?? "") === "true";
   if (!id) return { ok: false, message: "Missing category id." };
 
-  const supabase = await createSupabaseServerClient();
+  const gate = await requireAdminForAction();
+  if (!gate.ok) return gate;
+  const { supabase } = gate;
   const { error } = await supabase
     .from("categories")
     .update({ active: nextActive })
@@ -101,7 +107,9 @@ export async function deleteCategoryAction(
   const id = String(formData.get("id") ?? "");
   if (!id) return { ok: false, message: "Missing category id." };
 
-  const supabase = await createSupabaseServerClient();
+  const gate = await requireAdminForAction();
+  if (!gate.ok) return gate;
+  const { supabase } = gate;
   const { error } = await supabase.from("categories").delete().eq("id", id);
   if (error) return { ok: false, message: `Failed to delete: ${error.message}` };
 

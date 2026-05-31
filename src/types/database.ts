@@ -27,6 +27,48 @@ export type Database = {
         };
         Relationships: [];
       };
+      api_rate_limits: {
+        Row: {
+          id: number;
+          bucket: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: number;
+          bucket: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: number;
+          bucket?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      admin_audit_log: {
+        Row: {
+          id: string;
+          admin_email: string;
+          action: string;
+          detail: Json | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          admin_email: string;
+          action: string;
+          detail?: Json | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          admin_email?: string;
+          action?: string;
+          detail?: Json | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       users: {
         Row: {
           id: string;

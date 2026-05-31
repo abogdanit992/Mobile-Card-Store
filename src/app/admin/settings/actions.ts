@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requireAdminForAction } from "@/lib/auth/require-admin";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import type { Json } from "@/types/database";
 import type { ActionResult } from "@/lib/admin/action-result";
@@ -27,7 +27,9 @@ export async function updateLanguageSettingsAction(
   const tawkSrc = String(formData.get("tawk_src") ?? "").trim();
   const whatsappUrl = String(formData.get("whatsapp_url") ?? "").trim();
 
-  const supabase = await createSupabaseServerClient();
+  const gate = await requireAdminForAction();
+  if (!gate.ok) return gate;
+  const { supabase } = gate;
   const { error } = await supabase.from("site_settings").upsert([
     { key: "enabled_languages", value: enabled as unknown as Json },
     { key: "default_language", value: def as unknown as Json },

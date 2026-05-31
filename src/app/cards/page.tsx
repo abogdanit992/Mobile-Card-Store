@@ -1,19 +1,25 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatPrice } from "@/lib/format";
 import { MobileShell } from "@/components/mobile-shell";
 import { CardCodeDisplay } from "@/components/card-code-display";
 import { PrimaryButton } from "@/components/primary-button";
 import { StoreHeader } from "@/components/store-header";
 import { getTranslations } from "@/lib/i18n/server";
+import {
+  contactMatchesOrder,
+  fetchCardForOrder,
+  fetchOrderForContactVerification,
+} from "@/lib/orders/server-access";
 
 type CardsPageProps = {
   searchParams: Promise<{
     orderId?: string;
+    email?: string;
+    phone?: string;
   }>;
 };
 
 export default async function CardsPage({ searchParams }: CardsPageProps) {
-  const { orderId } = await searchParams;
+  const { orderId, email, phone } = await searchParams;
   const { t } = await getTranslations();
 
   if (!orderId) {
@@ -29,29 +35,71 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
     );
   }
 
-  const supabase = await createSupabaseServerClient();
-  const { data: order, error: orderError } = await supabase
-    .from("orders")
-    .select("id,product_id,status,amount")
-    .eq("id", orderId)
-    .maybeSingle();
+  const normalizedEmail = email?.trim().toLowerCase() || null;
+  const normalizedPhone = phone?.trim() || null;
+  const hasContact = Boolean(normalizedEmail || normalizedPhone);
 
-  const { data: card, error: cardError } = await supabase
-    .from("cards")
-    .select("id,code,used,used_at")
-    .eq("used_order_id", orderId)
-    .maybeSingle();
+  let verifyError: string | null = null;
+  let order: Awaited<ReturnType<typeof fetchOrderForContactVerification>> = null;
+  let card: Awaited<ReturnType<typeof fetchCardForOrder>> = null;
 
-  const errorMessage = orderError?.message || cardError?.message;
+  if (hasContact) {
+    order = await fetchOrderForContactVerification(orderId);
+
+    if (!order) {
+      verifyError = t.cardVerifyMismatch;
+    } else if (!contactMatchesOrder(order, normalizedEmail, normalizedPhone)) {
+      verifyError = t.cardVerifyMismatch;
+      order = null;
+    } else if (order.status !== "paid") {
+      verifyError = t.cardOrderNotPaid;
+    } else {
+      card = await fetchCardForOrder(orderId);
+    }
+  }
 
   return (
     <MobileShell>
       <StoreHeader title={t.cardDelivery} subtitle={t.keepSafe} backHref="/" />
 
       <div className="px-3 pt-3">
-        {errorMessage ? (
+        {!hasContact ? (
+          <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+            <p className="text-sm font-bold text-white">{t.cardVerifyTitle}</p>
+            <p className="mt-2 text-xs text-[var(--muted)]">{t.cardVerifyHint}</p>
+            <form className="mt-4 space-y-3" method="get">
+              <input type="hidden" name="orderId" value={orderId} />
+              <div>
+                <label className="text-xs text-[var(--muted)]">{t.email}</label>
+                <input
+                  name="email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  className="mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-black/30 px-3 text-sm text-white"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-[var(--muted)]">{t.phone}</label>
+                <input
+                  name="phone"
+                  type="tel"
+                  autoComplete="tel"
+                  className="mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-black/30 px-3 text-sm text-white"
+                />
+              </div>
+              <p className="text-[10px] text-[var(--muted)]">{t.lookupNeedOne}</p>
+              <button
+                type="submit"
+                className="h-11 w-full rounded-xl bg-[var(--accent)] text-sm font-bold text-white"
+              >
+                {t.cardVerifySubmit}
+              </button>
+            </form>
+          </section>
+        ) : verifyError ? (
           <section className="rounded-xl border border-red-900/50 bg-red-950/40 p-4 text-sm text-red-300">
-            {errorMessage}
+            {verifyError}
           </section>
         ) : card ? (
           <section className="rounded-xl border border-[var(--accent)]/50 bg-[var(--card)] p-5 glow-pink">
@@ -68,7 +116,8 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
             />
             {order ? (
               <p className="mt-3 text-center text-xs text-[var(--muted)]">
-                {t.order} {order.id.slice(0, 8)}… · {formatPrice(order.amount)} · {order.status}
+                {t.order} {order.id.slice(0, 8)}… · {formatPrice(order.amount)} ·{" "}
+                {order.status}
               </p>
             ) : null}
             <p className="mt-4 text-center text-[10px] text-[var(--muted)]">

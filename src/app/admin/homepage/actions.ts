@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requireAdminForAction } from "@/lib/auth/require-admin";
 import type { Json } from "@/types/database";
 import type { ActionResult } from "@/lib/admin/action-result";
 
@@ -27,7 +27,9 @@ export async function updateHomeContentAction(
     { key: "home_hero_desc_zh", value: read(formData, "home_hero_desc_zh") as unknown as Json },
   ];
 
-  const supabase = await createSupabaseServerClient();
+  const gate = await requireAdminForAction();
+  if (!gate.ok) return gate;
+  const { supabase } = gate;
   const { error } = await supabase.from("site_settings").upsert(rows);
   if (error) return { ok: false, message: `Failed to save: ${error.message}` };
 

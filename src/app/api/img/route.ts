@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isAllowedImageProxyUrl } from "@/lib/security/image-proxy";
 
 export const runtime = "nodejs";
 
@@ -11,8 +12,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const target = searchParams.get("u");
 
-  if (!target || !/^https?:\/\//i.test(target)) {
-    return NextResponse.json({ error: "Invalid url." }, { status: 400 });
+  if (!target || !isAllowedImageProxyUrl(target)) {
+    return NextResponse.json({ error: "Invalid or disallowed url." }, { status: 400 });
   }
 
   try {

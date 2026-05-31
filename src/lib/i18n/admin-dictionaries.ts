@@ -128,6 +128,7 @@ export type AdminDict = {
   // links
   linksTitle: string;
   linksSubtitle: string;
+  linksPromoHint: string;
   addLink: string;
   newLink: string;
   urlOrPath: string;
@@ -361,6 +362,8 @@ const en: AdminDict = {
 
   linksTitle: "Quick Links",
   linksSubtitle: "Top buttons on the storefront home",
+  linksPromoHint:
+    "Rows labeled [Promo] are for broadcast only — keep them Hidden. Broadcast links: keylounge.net/vip, /card, etc. URL field = main-site destination (vkeyshop.co) with UTM tags.",
   addLink: "Add link",
   newLink: "New link",
   urlOrPath: "URL or path (e.g. /faq or https://…) *",
@@ -590,6 +593,8 @@ const zh: AdminDict = {
 
   linksTitle: "快捷按钮",
   linksSubtitle: "主站首页顶部按钮",
+  linksPromoHint:
+    "带 [Promo] 前缀的条目仅供群发参考——请保持「隐藏」。群发链接：keylounge.net/vip、/card 等；URL 字段为主站 vkeyshop.co 跳转地址（含 UTM）。",
   addLink: "添加按钮",
   newLink: "新建按钮",
   urlOrPath: "URL 或路径（如 /faq 或 https://…）*",

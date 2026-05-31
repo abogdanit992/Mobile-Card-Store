@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "promo:generate": "node promo-landing/scripts/generate-pages.mjs",
+    "promo:deploy": "npm run promo:generate && cd promo-landing && npx wrangler@4 deploy"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

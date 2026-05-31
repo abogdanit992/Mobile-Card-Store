@@ -1,4 +1,6 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { requireAdminRoute } from "@/lib/auth/require-admin";
+import { logAdminAudit } from "@/lib/security/audit-log";
 
 function csvCell(value: unknown): string {
   const s = value === null || value === undefined ? "" : String(value);
@@ -9,8 +11,11 @@ function csvCell(value: unknown): string {
 }
 
 export async function GET() {
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  const gate = await requireAdminRoute();
+  if (!gate.ok) return gate.response;
+
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("customers")
     .select("email,phone,order_count,total_spent,first_seen,last_order_at")
     .order("last_order_at", { ascending: false });
@@ -18,6 +23,10 @@ export async function GET() {
   if (error) {
     return new Response(error.message, { status: 500 });
   }
+
+  await logAdminAudit(gate.email, "customers.export", {
+    rows: data?.length ?? 0,
+  });
 
   const header = [
     "email",

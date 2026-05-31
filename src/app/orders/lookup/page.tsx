@@ -1,9 +1,14 @@
 import Link from "next/link";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { headers } from "next/headers";
 import { formatPrice } from "@/lib/format";
 import { MobileShell } from "@/components/mobile-shell";
 import { StoreHeader } from "@/components/store-header";
 import { getTranslations } from "@/lib/i18n/server";
+import { lookupOrdersByContact } from "@/lib/orders/server-access";
+import {
+  checkRateLimit,
+  clientIpFromHeaders,
+} from "@/lib/security/rate-limit";
 
 type LookupPageProps = {
   searchParams: Promise<{
@@ -15,8 +20,8 @@ type LookupPageProps = {
 export default async function OrderLookupPage({ searchParams }: LookupPageProps) {
   const { email, phone } = await searchParams;
   const { locale, t } = await getTranslations();
-  const normalizedEmail = email?.trim().toLowerCase();
-  const normalizedPhone = phone?.trim();
+  const normalizedEmail = email?.trim().toLowerCase() || null;
+  const normalizedPhone = phone?.trim() || null;
   const hasQuery = Boolean(normalizedEmail || normalizedPhone);
 
   let orders: Array<{
@@ -29,25 +34,26 @@ export default async function OrderLookupPage({ searchParams }: LookupPageProps)
   let errorMessage: string | null = null;
 
   if (hasQuery) {
-    const supabase = await createSupabaseServerClient();
-    let query = supabase
-      .from("orders")
-      .select("id,amount,status,created_at,contact_phone,contact_email")
-      .order("created_at", { ascending: false })
-      .limit(50);
+    const h = await headers();
+    const ip = clientIpFromHeaders(h);
+    const allowed = await checkRateLimit({
+      bucket: `lookup:${ip}`,
+      max: 15,
+      windowMs: 60_000,
+    });
 
-    if (normalizedEmail) {
-      query = query.eq("contact_email", normalizedEmail);
-    }
-    if (normalizedPhone) {
-      query = query.eq("contact_phone", normalizedPhone);
-    }
-
-    const { data, error } = await query;
-    if (error) {
-      errorMessage = error.message;
+    if (!allowed) {
+      errorMessage = t.rateLimitExceeded;
     } else {
-      orders = data ?? [];
+      const { data, error } = await lookupOrdersByContact(
+        normalizedEmail,
+        normalizedPhone,
+      );
+      if (error) {
+        errorMessage = error.message;
+      } else {
+        orders = data;
+      }
     }
   }
 
@@ -89,30 +95,39 @@ export default async function OrderLookupPage({ searchParams }: LookupPageProps)
           <p className="mt-3 text-sm text-red-400">{errorMessage}</p>
         ) : null}
 
-        {hasQuery ? (
+        {hasQuery && !errorMessage ? (
           <section className="mt-4 grid gap-2">
             {orders.length > 0 ? (
-              orders.map((order) => (
-                <Link
-                  key={order.id}
-                  href={`/cards?orderId=${order.id}`}
-                  className="block rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 transition hover:border-[var(--accent-soft)]"
-                >
-                  <p className="text-xs text-[var(--muted)]">
-                    {new Date(order.created_at).toLocaleString(
-                      locale === "zh" ? "zh-CN" : "en-US",
-                    )}
-                  </p>
-                  <p className="mt-1 font-bold text-[var(--gold)]">
-                    {formatPrice(order.amount)} · {order.status}
-                  </p>
-                  <p className="mt-1 text-[10px] text-[var(--muted)]">
-                    {t.order} {order.id.slice(0, 8)}…
-                    {order.contact_phone ? ` · ${order.contact_phone}` : ""}
-                  </p>
-                  <p className="mt-2 text-xs text-[var(--accent-soft)]">{t.viewCard}</p>
-                </Link>
-              ))
+              orders.map((order) => {
+                const contact =
+                  order.contact_phone || normalizedEmail || normalizedPhone || "";
+                const qs = new URLSearchParams({ orderId: order.id });
+                if (normalizedEmail) qs.set("email", normalizedEmail);
+                if (normalizedPhone) qs.set("phone", normalizedPhone);
+                else if (contact && normalizedEmail) qs.set("email", normalizedEmail);
+
+                return (
+                  <Link
+                    key={order.id}
+                    href={`/cards?${qs.toString()}`}
+                    className="block rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 transition hover:border-[var(--accent-soft)]"
+                  >
+                    <p className="text-xs text-[var(--muted)]">
+                      {new Date(order.created_at).toLocaleString(
+                        locale === "zh" ? "zh-CN" : "en-US",
+                      )}
+                    </p>
+                    <p className="mt-1 font-bold text-[var(--gold)]">
+                      {formatPrice(order.amount)} · {order.status}
+                    </p>
+                    <p className="mt-1 text-[10px] text-[var(--muted)]">
+                      {t.order} {order.id.slice(0, 8)}…
+                      {order.contact_phone ? ` · ${order.contact_phone}` : ""}
+                    </p>
+                    <p className="mt-2 text-xs text-[var(--accent-soft)]">{t.viewCard}</p>
+                  </Link>
+                );
+              })
             ) : (
               <p className="text-center text-sm text-[var(--muted)]">{t.lookupNotFound}</p>
             )}

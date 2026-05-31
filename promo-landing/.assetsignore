@@ -1,0 +1,7 @@
+scripts/
+README.md
+wrangler.toml
+.wrangler/
+*.zip
+.assetsignore
+.wranglerignore

@@ -30,6 +30,10 @@ export default async function AdminLinksPage() {
         subtitle={t.linksSubtitle}
       />
 
+      <p className="mt-3 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2.5 text-xs leading-relaxed text-violet-900">
+        {t.linksPromoHint}
+      </p>
+
       <ActionForm
         action={createQuickLinkAction}
         resetOnSuccess

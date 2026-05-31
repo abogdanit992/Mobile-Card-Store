@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requireAdminForAction } from "@/lib/auth/require-admin";
 import type { Json } from "@/types/database";
 import type { ActionResult } from "@/lib/admin/action-result";
 
@@ -38,7 +38,9 @@ export async function updatePaymentChannelAction(
     if (val) config[key] = val;
   }
 
-  const supabase = await createSupabaseServerClient();
+  const gate = await requireAdminForAction();
+  if (!gate.ok) return gate;
+  const { supabase } = gate;
   const { error } = await supabase
     .from("payment_channels")
     .update({

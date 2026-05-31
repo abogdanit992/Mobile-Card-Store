@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requireAdminForAction } from "@/lib/auth/require-admin";
 import type { Database } from "@/types/database";
 import type { ActionResult } from "@/lib/admin/action-result";
 
@@ -19,7 +19,9 @@ export async function createFaqAction(
   if (!answerEn) return { ok: false, message: "English answer is required." };
 
   const sortOrder = Number(formData.get("sort_order") ?? 0);
-  const supabase = await createSupabaseServerClient();
+  const gate = await requireAdminForAction();
+  if (!gate.ok) return gate;
+  const { supabase } = gate;
   const payload: Database["public"]["Tables"]["faqs"]["Insert"] = {
     question_en: questionEn,
     question_zh: read(formData, "question_zh") || null,
@@ -50,7 +52,9 @@ export async function updateFaqAction(
   if (!answerEn) return { ok: false, message: "English answer is required." };
 
   const sortOrder = Number(formData.get("sort_order") ?? 0);
-  const supabase = await createSupabaseServerClient();
+  const gate = await requireAdminForAction();
+  if (!gate.ok) return gate;
+  const { supabase } = gate;
   const update: Database["public"]["Tables"]["faqs"]["Update"] = {
     question_en: questionEn,
     question_zh: read(formData, "question_zh") || null,
@@ -75,7 +79,9 @@ export async function toggleFaqAction(
   const nextActive = read(formData, "nextActive") === "true";
   if (!id) return { ok: false, message: "Missing FAQ id." };
 
-  const supabase = await createSupabaseServerClient();
+  const gate = await requireAdminForAction();
+  if (!gate.ok) return gate;
+  const { supabase } = gate;
   const { error } = await supabase.from("faqs").update({ active: nextActive }).eq("id", id);
   if (error) return { ok: false, message: `Failed: ${error.message}` };
 
@@ -91,7 +97,9 @@ export async function deleteFaqAction(
   const id = read(formData, "id");
   if (!id) return { ok: false, message: "Missing FAQ id." };
 
-  const supabase = await createSupabaseServerClient();
+  const gate = await requireAdminForAction();
+  if (!gate.ok) return gate;
+  const { supabase } = gate;
   const { error } = await supabase.from("faqs").delete().eq("id", id);
   if (error) return { ok: false, message: `Failed to delete: ${error.message}` };
 

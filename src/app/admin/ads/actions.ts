@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requireAdminForAction } from "@/lib/auth/require-admin";
 import type { Database } from "@/types/database";
 import type { ActionResult } from "@/lib/admin/action-result";
 
@@ -22,7 +22,9 @@ export async function createAdAction(
   if (!textEn) return { ok: false, message: "English text is required." };
 
   const sortOrder = Number(formData.get("sort_order") ?? 0);
-  const supabase = await createSupabaseServerClient();
+  const gate = await requireAdminForAction();
+  if (!gate.ok) return gate;
+  const { supabase } = gate;
   const payload: Database["public"]["Tables"]["ads"]["Insert"] = {
     text_en: textEn,
     text_zh: read(formData, "text_zh") || null,
@@ -49,7 +51,9 @@ export async function updateAdAction(
   if (!textEn) return { ok: false, message: "English text is required." };
 
   const sortOrder = Number(formData.get("sort_order") ?? 0);
-  const supabase = await createSupabaseServerClient();
+  const gate = await requireAdminForAction();
+  if (!gate.ok) return gate;
+  const { supabase } = gate;
   const update: Database["public"]["Tables"]["ads"]["Update"] = {
     text_en: textEn,
     text_zh: read(formData, "text_zh") || null,
@@ -72,7 +76,9 @@ export async function toggleAdAction(
   const nextActive = read(formData, "nextActive") === "true";
   if (!id) return { ok: false, message: "Missing ad id." };
 
-  const supabase = await createSupabaseServerClient();
+  const gate = await requireAdminForAction();
+  if (!gate.ok) return gate;
+  const { supabase } = gate;
   const { error } = await supabase.from("ads").update({ active: nextActive }).eq("id", id);
   if (error) return { ok: false, message: `Failed: ${error.message}` };
 
@@ -87,7 +93,9 @@ export async function deleteAdAction(
   const id = read(formData, "id");
   if (!id) return { ok: false, message: "Missing ad id." };
 
-  const supabase = await createSupabaseServerClient();
+  const gate = await requireAdminForAction();
+  if (!gate.ok) return gate;
+  const { supabase } = gate;
   const { error } = await supabase.from("ads").delete().eq("id", id);
   if (error) return { ok: false, message: `Failed to delete: ${error.message}` };
 

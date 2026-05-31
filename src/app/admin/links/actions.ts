@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requireAdminForAction } from "@/lib/auth/require-admin";
 import type { Database } from "@/types/database";
 import type { ActionResult } from "@/lib/admin/action-result";
 
@@ -9,17 +9,24 @@ function read(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
 }
 
+async function withAdmin() {
+  return requireAdminForAction();
+}
+
 export async function createQuickLinkAction(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
+  const gate = await withAdmin();
+  if (!gate.ok) return gate;
+  const { supabase } = gate;
+
   const labelEn = read(formData, "label_en");
   const url = read(formData, "url");
   if (!labelEn) return { ok: false, message: "English label is required." };
   if (!url) return { ok: false, message: "URL / path is required." };
 
   const sortOrder = Number(formData.get("sort_order") ?? 0);
-  const supabase = await createSupabaseServerClient();
   const payload: Database["public"]["Tables"]["quick_links"]["Insert"] = {
     label_en: labelEn,
     label_zh: read(formData, "label_zh") || null,
@@ -41,6 +48,10 @@ export async function updateQuickLinkAction(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
+  const gate = await withAdmin();
+  if (!gate.ok) return gate;
+  const { supabase } = gate;
+
   const id = read(formData, "id");
   if (!id) return { ok: false, message: "Missing link id." };
 
@@ -50,7 +61,6 @@ export async function updateQuickLinkAction(
   if (!url) return { ok: false, message: "URL / path is required." };
 
   const sortOrder = Number(formData.get("sort_order") ?? 0);
-  const supabase = await createSupabaseServerClient();
   const update: Database["public"]["Tables"]["quick_links"]["Update"] = {
     label_en: labelEn,
     label_zh: read(formData, "label_zh") || null,
@@ -71,11 +81,14 @@ export async function toggleQuickLinkAction(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
+  const gate = await withAdmin();
+  if (!gate.ok) return gate;
+  const { supabase } = gate;
+
   const id = read(formData, "id");
   const nextActive = read(formData, "nextActive") === "true";
   if (!id) return { ok: false, message: "Missing link id." };
 
-  const supabase = await createSupabaseServerClient();
   const { error } = await supabase
     .from("quick_links")
     .update({ active: nextActive })
@@ -91,10 +104,13 @@ export async function deleteQuickLinkAction(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
+  const gate = await withAdmin();
+  if (!gate.ok) return gate;
+  const { supabase } = gate;
+
   const id = read(formData, "id");
   if (!id) return { ok: false, message: "Missing link id." };
 
-  const supabase = await createSupabaseServerClient();
   const { error } = await supabase.from("quick_links").delete().eq("id", id);
   if (error) return { ok: false, message: `Failed to delete: ${error.message}` };
 

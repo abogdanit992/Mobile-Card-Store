@@ -99,6 +99,13 @@ export type Dict = {
   copied: string;
   tapToCopy: string;
   keepShopping: string;
+  // card verification (option B)
+  cardVerifyTitle: string;
+  cardVerifyHint: string;
+  cardVerifySubmit: string;
+  cardVerifyMismatch: string;
+  cardOrderNotPaid: string;
+  rateLimitExceeded: string;
   // direct USDT
   usdtPayTitle: string;
   usdtPaySubtitle: string;
@@ -206,6 +213,13 @@ const en: Dict = {
   copied: "Copied!",
   tapToCopy: "Tap the code or button to copy",
   keepShopping: "Keep shopping",
+  cardVerifyTitle: "Verify your order",
+  cardVerifyHint:
+    "Enter the same email or phone you used at checkout to view your activation code.",
+  cardVerifySubmit: "View my code",
+  cardVerifyMismatch: "We couldn't verify this order. Check your email or phone.",
+  cardOrderNotPaid: "Payment not confirmed yet. Wait a moment and try again.",
+  rateLimitExceeded: "Too many requests. Please wait a minute and try again.",
   usdtPayTitle: "Pay with USDT",
   usdtPaySubtitle: "TRC20 · exact amount required",
   usdtNotConfigured: "USDT direct payment is not configured.",
@@ -314,6 +328,12 @@ const zh: Dict = {
   copied: "已复制",
   tapToCopy: "点击卡密或下方按钮即可复制",
   keepShopping: "继续逛逛",
+  cardVerifyTitle: "验证订单",
+  cardVerifyHint: "请输入下单时使用的邮箱或手机号，以查看激活码。",
+  cardVerifySubmit: "查看卡密",
+  cardVerifyMismatch: "验证失败，请检查邮箱或手机号是否正确。",
+  cardOrderNotPaid: "订单尚未支付成功，请稍后再试。",
+  rateLimitExceeded: "请求过于频繁，请稍后再试。",
   usdtPayTitle: "USDT 支付",
   usdtPaySubtitle: "TRC20 网络 · 金额必须完全一致",
   usdtNotConfigured: "USDT 直连支付尚未配置。",
