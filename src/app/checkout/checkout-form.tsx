@@ -4,10 +4,18 @@ import { useState } from "react";
 import { PrimaryButton } from "@/components/primary-button";
 
 import type { Provider } from "@/lib/payments/types";
+import {
+  convertUsdToCny,
+  formatCnyPrice,
+  isCnyCheckoutProvider,
+  parseExchangeRate,
+} from "@/lib/payments/exchange-rate";
+import { formatPrice } from "@/lib/format";
 
 type ChannelOption = {
   provider: Provider;
   label: string;
+  exchangeRate?: string | null;
 };
 
 type CheckoutLabels = {
@@ -25,13 +33,18 @@ type CheckoutLabels = {
   invalidEmail: string;
   selectChannelFirst: string;
   loading: string;
+  orderInfo: string;
+  usdReference: string;
+  cnyRateHint: string;
+  cnyRateMissing: string;
 };
 
 type CheckoutFormProps = {
   productId: string;
+  productName: string;
+  priceUsd: number;
   defaultEmail?: string;
   defaultPhone?: string;
-  priceLabel: string;
   channels: ChannelOption[];
   labels: CheckoutLabels;
 };
@@ -52,11 +65,23 @@ function providerIcon(provider: Provider): string {
   return PROVIDER_ICON[provider] ?? "💰";
 }
 
+function channelPayLabel(
+  provider: Provider,
+  priceUsd: number,
+  exchangeRate?: string | null,
+): string | null {
+  if (!isCnyCheckoutProvider(provider)) return null;
+  const rate = parseExchangeRate(exchangeRate);
+  if (!rate) return null;
+  return formatCnyPrice(convertUsdToCny(priceUsd, exchangeRate));
+}
+
 export function CheckoutForm({
   productId,
+  productName,
+  priceUsd,
   defaultEmail = "",
   defaultPhone = "",
-  priceLabel,
   channels,
   labels,
 }: CheckoutFormProps) {
@@ -67,6 +92,25 @@ export function CheckoutForm({
   );
   const [email, setEmail] = useState(defaultEmail);
   const [phone, setPhone] = useState(defaultPhone);
+
+  const selectedChannel = channels.find((c) => c.provider === selected);
+  const selectedUsesCny =
+    selected != null && isCnyCheckoutProvider(selected);
+  const selectedRate = parseExchangeRate(selectedChannel?.exchangeRate);
+  const payAmountCny =
+    selectedUsesCny && selectedRate
+      ? convertUsdToCny(priceUsd, selectedChannel?.exchangeRate)
+      : null;
+
+  const payButtonLabel = (() => {
+    if (payAmountCny != null) {
+      return `${labels.pay} ${formatCnyPrice(payAmountCny)} (≈ ${formatPrice(priceUsd)})`;
+    }
+    if (selectedUsesCny && !selectedRate) {
+      return labels.pay;
+    }
+    return `${labels.pay} ${formatPrice(priceUsd)}`;
+  })();
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -85,6 +129,10 @@ export function CheckoutForm({
     }
     if (!selected) {
       setError(labels.selectChannelFirst);
+      return;
+    }
+    if (isCnyCheckoutProvider(selected) && !parseExchangeRate(selectedChannel?.exchangeRate)) {
+      setError(labels.cnyRateMissing);
       return;
     }
 
@@ -118,6 +166,31 @@ export function CheckoutForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent-soft)]">
+          {labels.orderInfo}
+        </p>
+        <h2 className="mt-2 text-lg font-bold text-white">{productName}</h2>
+        {payAmountCny != null ? (
+          <>
+            <p className="mt-2 text-2xl font-black text-[var(--gold)]">
+              {formatCnyPrice(payAmountCny)}
+            </p>
+            <p className="mt-1 text-xs text-[var(--muted)]">
+              {labels.usdReference} {formatPrice(priceUsd)} · {labels.cnyRateHint}{" "}
+              {selectedRate}
+            </p>
+          </>
+        ) : (
+          <p className="mt-2 text-2xl font-black text-[var(--gold)]">
+            {formatPrice(priceUsd)}
+          </p>
+        )}
+        {selectedUsesCny && !selectedRate ? (
+          <p className="mt-2 text-xs text-amber-400">{labels.cnyRateMissing}</p>
+        ) : null}
+      </section>
+
       <section className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
         <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent-soft)]">
           {labels.contactInfo}
@@ -166,7 +239,14 @@ export function CheckoutForm({
                 }`}
               >
                 <span className="text-lg">{providerIcon(ch.provider)}</span>
-                <span className="flex-1">{ch.label}</span>
+                <span className="flex-1">
+                  {ch.label}
+                  {channelPayLabel(ch.provider, priceUsd, ch.exchangeRate) ? (
+                    <span className="ml-1 text-xs font-normal text-[var(--muted)]">
+                      · {channelPayLabel(ch.provider, priceUsd, ch.exchangeRate)}
+                    </span>
+                  ) : null}
+                </span>
                 <span
                   className={`h-4 w-4 rounded-full border ${
                     selected === ch.provider
@@ -183,7 +263,7 @@ export function CheckoutForm({
       {error ? <p className="text-sm text-red-400">{error}</p> : null}
 
       <PrimaryButton type="submit" disabled={isLoading || channels.length === 0}>
-        {isLoading ? labels.loading : `${labels.pay} ${priceLabel}`}
+        {isLoading ? labels.loading : payButtonLabel}
       </PrimaryButton>
     </form>
   );

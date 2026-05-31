@@ -1,6 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/user";
-import { formatPrice } from "@/lib/format";
 import { MobileShell } from "@/components/mobile-shell";
 import { StoreHeader } from "@/components/store-header";
 import { CheckoutForm } from "./checkout-form";
@@ -42,7 +41,7 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
 
   const { data: channels } = await supabase
     .from("payment_channels_public")
-    .select("id,provider,label_en,label_zh,sort_order")
+    .select("id,provider,label_en,label_zh,sort_order,exchange_rate")
     .order("sort_order", { ascending: true });
 
   let profilePhone: string | null = null;
@@ -72,6 +71,7 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
   const paymentChannels = (channels ?? []).map((c) => ({
     provider: c.provider,
     label: pickLocalized(locale, c.label_en, c.label_zh, c.provider),
+    exchangeRate: c.exchange_rate ?? null,
   }));
 
   return (
@@ -83,23 +83,15 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
       />
 
       <div className="space-y-3 px-3 pt-3 pb-8">
-        <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent-soft)]">
-            {t.orderInfo}
-          </p>
-          <h2 className="mt-2 text-lg font-bold text-white">{productName}</h2>
-          <p className="mt-2 text-2xl font-black text-[var(--gold)]">
-            {formatPrice(product.price)}
-          </p>
-        </section>
-
         <CheckoutForm
           productId={product.id}
+          productName={productName}
+          priceUsd={Number(product.price)}
           defaultEmail={user?.email ?? ""}
           defaultPhone={profilePhone ?? ""}
-          priceLabel={formatPrice(product.price)}
           channels={paymentChannels}
           labels={{
+            orderInfo: t.orderInfo,
             contactInfo: t.contactInfo,
             contactInfoHint: t.contactInfoHint,
             emailOptional: t.emailOptional,
@@ -114,6 +106,9 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
             invalidEmail: t.invalidEmail,
             selectChannelFirst: t.selectChannelFirst,
             loading: t.loading,
+            usdReference: t.usdReference,
+            cnyRateHint: t.cnyRateHint,
+            cnyRateMissing: t.cnyRateMissing,
           }}
         />
       </div>

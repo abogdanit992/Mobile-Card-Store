@@ -70,11 +70,13 @@ function apiBase(config: ChannelConfig): string {
   return (config.api_base_url?.trim() || DEFAULT_API_BASE).replace(/\/$/, "");
 }
 
-function resolveMoney(amount: number, config: ChannelConfig): string {
-  const rate = Number(config.exchange_rate);
-  const value = Number.isFinite(rate) && rate > 0 ? amount * rate : amount;
-  return value.toFixed(2);
-}
+import {
+  convertUsdToCny,
+  formatCnyPrice,
+  isCnyCheckoutProvider,
+  parseExchangeRate,
+  requireCnyAmount,
+} from "./exchange-rate";
 
 async function postForm<T>(
   url: string,
@@ -112,7 +114,7 @@ export async function createItxtPayment(
 ): Promise<CreatePaymentResult> {
   const { mid, secret, channelCode } = requireConfig(params.config);
   const merOrderTid = buildMerOrderTid(params.paymentId);
-  const money = resolveMoney(params.amount, params.config);
+  const money = requireCnyAmount(params.amount, params.config);
 
   const orderFields: Record<string, string> = {
     mid,

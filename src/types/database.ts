@@ -544,6 +544,7 @@ export type Database = {
           label_zh: string | null;
           enabled: boolean;
           sort_order: number;
+          exchange_rate: string | null;
         };
         Relationships: [];
       };

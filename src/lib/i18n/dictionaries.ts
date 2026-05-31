@@ -63,6 +63,9 @@ export type Dict = {
   invalidEmail: string;
   invalidPhone: string;
   selectChannelFirst: string;
+  usdReference: string;
+  cnyRateHint: string;
+  cnyRateMissing: string;
   // generic
   back: string;
   backHome: string;
@@ -181,6 +184,9 @@ const en: Dict = {
   invalidEmail: "Please enter a valid email",
   invalidPhone: "Please enter a valid phone",
   selectChannelFirst: "Please select a payment method",
+  usdReference: "List price",
+  cnyRateHint: "USD→CNY rate",
+  cnyRateMissing: "WeChat/Alipay needs USD→CNY exchange rate in admin. Please contact support.",
   back: "Back",
   backHome: "Back to home",
   loading: "Loading…",
@@ -296,6 +302,9 @@ const zh: Dict = {
   invalidEmail: "请填写有效邮箱",
   invalidPhone: "请填写有效手机号",
   selectChannelFirst: "请选择支付方式",
+  usdReference: "标价",
+  cnyRateHint: "USD→CNY 汇率",
+  cnyRateMissing: "微信/支付宝需在后台配置 USD→CNY 汇率，请联系客服。",
   back: "返回",
   backHome: "返回首页",
   loading: "加载中…",

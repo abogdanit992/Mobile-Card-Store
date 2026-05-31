@@ -6,6 +6,8 @@ export function formatPrice(value: number) {
   }).format(value);
 }
 
+export { formatCnyPrice } from "@/lib/payments/exchange-rate";
+
 /** Sultry dark-theme card cover gradients (no explicit imagery). */
 export function productGradientClass(seed: string) {
   const palettes = [

@@ -9,6 +9,19 @@ function read(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
 }
 
+const SECRET_CONFIG_KEYS = new Set([
+  "merchant_secret",
+  "payment_api_key",
+  "api_key",
+  "ipn_secret",
+  "secret_key",
+  "webhook_secret",
+  "client_secret",
+  "private_key",
+  "api_v3_key",
+  "tron_api_key",
+]);
+
 const CONFIG_KEYS: Record<string, string[]> = {
   cryptomus: ["merchant_id", "payment_api_key"],
   nowpayments: ["api_key", "ipn_secret"],
@@ -56,15 +69,33 @@ export async function updatePaymentChannelAction(
   const enabled = read(formData, "enabled") === "on";
   const sortOrder = Number(formData.get("sort_order") ?? 0);
 
-  const config: Record<string, string> = {};
-  for (const key of CONFIG_KEYS[provider] ?? []) {
-    const val = read(formData, `config_${key}`);
-    if (val) config[key] = val;
-  }
-
   const gate = await requireAdminForAction();
   if (!gate.ok) return gate;
   const { supabase } = gate;
+
+  const { data: existingRow } = await supabase
+    .from("payment_channels")
+    .select("config")
+    .eq("id", id)
+    .maybeSingle();
+
+  const prev =
+    existingRow?.config && typeof existingRow.config === "object"
+      ? (existingRow.config as Record<string, string>)
+      : {};
+
+  const config: Record<string, string> = { ...prev };
+  for (const key of CONFIG_KEYS[provider] ?? []) {
+    const val = read(formData, `config_${key}`);
+    if (val) {
+      config[key] = val;
+    } else if (SECRET_CONFIG_KEYS.has(key) && prev[key]) {
+      config[key] = prev[key];
+    } else if (!SECRET_CONFIG_KEYS.has(key)) {
+      delete config[key];
+    }
+  }
+
   const { error } = await supabase
     .from("payment_channels")
     .update({
