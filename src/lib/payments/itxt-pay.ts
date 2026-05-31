@@ -31,10 +31,11 @@ type QueryOrderResult = {
   money: number;
 };
 
-/** merOrderTid max 30 chars; UUID without dashes is 32 — trim to fit. */
+/** merOrderTid max 30 chars; include time prefix for uniqueness across retries. */
 export function buildMerOrderTid(paymentId: string): string {
-  const compact = paymentId.replace(/-/g, "");
-  return compact.slice(0, 30);
+  const ts = Date.now().toString(36);
+  const suffix = paymentId.replace(/-/g, "").slice(0, 10);
+  return `V${ts}${suffix}`.slice(0, 30);
 }
 
 function md5(input: string): string {
@@ -115,8 +116,9 @@ export async function createItxtPayment(
     money,
     channelCode,
     notifyUrl: params.callbackUrl,
-    returnUrl: params.successUrl,
   };
+
+  // returnUrl is optional; omit to avoid upstream channel errors on some gateways.
 
   if (params.clientIp) {
     orderFields.clientIp = params.clientIp;
@@ -130,7 +132,9 @@ export async function createItxtPayment(
   );
 
   if (json.status !== 0 || !json.result) {
-    throw new Error(json.errMsg ?? "Create order failed.");
+    const msg = json.errMsg?.trim() || "Create order failed.";
+    console.error("[itxt] CreateOrderPay failed:", msg, { merOrderTid, money, channelCode });
+    throw new Error(msg);
   }
 
   const payUrl = json.result.payUrl?.trim();

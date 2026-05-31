@@ -14,6 +14,11 @@ import {
 } from "@/lib/payments/service";
 import type { Provider } from "@/lib/payments/types";
 import { ALL_PROVIDERS } from "@/lib/payments/types";
+import {
+  buildItxtRedirectUrl,
+  formatGatewayPaymentError,
+} from "@/lib/payments/itxt-checkout";
+import { findReusableItxtCheckout } from "@/lib/payments/itxt-sync";
 
 type CreateBody = {
   productId?: string;
@@ -91,6 +96,31 @@ export async function POST(request: Request) {
     );
   }
 
+  const origin = await getOrigin();
+  const h = await headers();
+  const userAgent = h.get("user-agent") ?? "";
+
+  // Reuse recent pending WeChat/Alipay order (avoids hammering the gateway on retries).
+  if (provider === "wechat" || provider === "alipay") {
+    const reused = await findReusableItxtCheckout(admin, {
+      productId: product.id,
+      provider,
+      contactEmail: contactEmail ?? null,
+      contactPhone: contactPhone ?? null,
+    });
+    if (reused) {
+      return NextResponse.json({
+        ok: true,
+        redirectUrl: buildItxtRedirectUrl(
+          origin,
+          reused.orderId,
+          reused.payUrl,
+          userAgent,
+        ),
+      });
+    }
+  }
+
   // Create pending order (pre-generate id for direct_usdt exact amount)
   const orderId = randomUUID();
   const isDirectUsdt = provider === "direct_usdt";
@@ -148,8 +178,6 @@ export async function POST(request: Request) {
     );
   }
 
-  const origin = await getOrigin();
-  const h = await headers();
   const clientIp =
     h.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     h.get("x-real-ip")?.trim() ??
@@ -192,23 +220,22 @@ export async function POST(request: Request) {
       })
       .eq("id", payment.id);
 
-    let redirectUrl = result.redirectUrl;
-    if (
-      (provider === "wechat" || provider === "alipay") &&
-      result.paymentPageUrl
-    ) {
-      const ua = h.get("user-agent") ?? "";
-      const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
-      redirectUrl = isMobile
-        ? result.paymentPageUrl
-        : `${origin}/payment/scan?orderId=${order.id}`;
-    }
+    const redirectUrl =
+      (provider === "wechat" || provider === "alipay") && result.paymentPageUrl
+        ? buildItxtRedirectUrl(
+            origin,
+            order.id,
+            result.paymentPageUrl,
+            userAgent,
+          )
+        : result.redirectUrl;
 
     return NextResponse.json({ ok: true, redirectUrl });
   } catch (err) {
     await admin.from("orders").update({ status: "cancelled" }).eq("id", order.id);
     await admin.from("payments").update({ status: "failed" }).eq("id", payment.id);
-    const message = err instanceof Error ? err.message : "Payment failed.";
+    const raw = err instanceof Error ? err.message : "Payment failed.";
+    const message = formatGatewayPaymentError(raw, provider);
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }

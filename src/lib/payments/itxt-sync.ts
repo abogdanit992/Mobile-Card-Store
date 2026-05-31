@@ -14,10 +14,65 @@ function merOrderTidFromRaw(raw: unknown): string | null {
   return typeof v === "string" && v.trim() ? v.trim() : null;
 }
 
-function payUrlFromRaw(raw: unknown): string | null {
+export function payUrlFromRaw(raw: unknown): string | null {
   if (!raw || typeof raw !== "object") return null;
   const v = (raw as Record<string, unknown>).payUrl;
   return typeof v === "string" && v.trim() ? v.trim() : null;
+}
+
+const ITXT_REUSE_WINDOW_MS = 30 * 60 * 1000;
+
+/** Reuse a recent pending WeChat/Alipay checkout instead of calling the gateway again. */
+export async function findReusableItxtCheckout(
+  admin: AdminClient,
+  params: {
+    productId: string;
+    provider: "wechat" | "alipay";
+    contactEmail?: string | null;
+    contactPhone?: string | null;
+  },
+): Promise<{ orderId: string; payUrl: string } | null> {
+  const since = new Date(Date.now() - ITXT_REUSE_WINDOW_MS).toISOString();
+
+  let orderQuery = admin
+    .from("orders")
+    .select("id")
+    .eq("product_id", params.productId)
+    .eq("status", "pending")
+    .gte("created_at", since)
+    .order("created_at", { ascending: false })
+    .limit(8);
+
+  if (params.contactEmail) {
+    orderQuery = orderQuery.eq("contact_email", params.contactEmail);
+  } else if (params.contactPhone) {
+    orderQuery = orderQuery.eq("contact_phone", params.contactPhone);
+  } else {
+    return null;
+  }
+
+  const { data: orders } = await orderQuery;
+  if (!orders?.length) return null;
+
+  for (const order of orders) {
+    const { data: payment } = await admin
+      .from("payments")
+      .select("provider,status,raw")
+      .eq("order_id", order.id)
+      .maybeSingle();
+
+    if (
+      payment?.provider === params.provider &&
+      payment.status === "pending"
+    ) {
+      const payUrl = payUrlFromRaw(payment.raw);
+      if (payUrl) {
+        return { orderId: order.id, payUrl };
+      }
+    }
+  }
+
+  return null;
 }
 
 export function isItxtProvider(provider: string): provider is "wechat" | "alipay" {
