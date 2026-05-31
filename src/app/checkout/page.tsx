@@ -82,7 +82,7 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
         backLabel={t.back}
       />
 
-      <div className="space-y-3 px-3 pt-3 pb-8">
+      <div className="space-y-3 px-3 pt-3 pb-[max(2rem,env(safe-area-inset-bottom))]">
         <CheckoutForm
           productId={product.id}
           productName={productName}

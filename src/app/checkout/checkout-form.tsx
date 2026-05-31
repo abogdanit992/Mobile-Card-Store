@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState, type RefObject } from "react";
 import { PrimaryButton } from "@/components/primary-button";
 
 import type { Provider } from "@/lib/payments/types";
@@ -76,6 +76,12 @@ function channelPayLabel(
   return formatCnyPrice(convertUsdToCny(priceUsd, exchangeRate));
 }
 
+function scrollPayButtonIntoView(payRef: RefObject<HTMLElement | null>) {
+  window.setTimeout(() => {
+    payRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+  }, 100);
+}
+
 export function CheckoutForm({
   productId,
   productName,
@@ -92,6 +98,11 @@ export function CheckoutForm({
   );
   const [email, setEmail] = useState(defaultEmail);
   const [phone, setPhone] = useState(defaultPhone);
+  const payRef = useRef<HTMLDivElement>(null);
+
+  function handleContactBlur() {
+    scrollPayButtonIntoView(payRef);
+  }
 
   const selectedChannel = channels.find((c) => c.provider === selected);
   const selectedUsesCny =
@@ -204,7 +215,8 @@ export function CheckoutForm({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder={labels.emailHint}
-            className="mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-black/30 px-3 text-sm text-white"
+            className="mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-black/30 px-3 text-base text-white"
+            onBlur={handleContactBlur}
           />
         </div>
         <div>
@@ -214,7 +226,8 @@ export function CheckoutForm({
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder={labels.phoneHint}
-            className="mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-black/30 px-3 text-sm text-white"
+            className="mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-black/30 px-3 text-base text-white"
+            onBlur={handleContactBlur}
           />
         </div>
       </section>
@@ -262,9 +275,11 @@ export function CheckoutForm({
 
       {error ? <p className="text-sm text-red-400">{error}</p> : null}
 
-      <PrimaryButton type="submit" disabled={isLoading || channels.length === 0}>
-        {isLoading ? labels.loading : payButtonLabel}
-      </PrimaryButton>
+      <div ref={payRef} className="pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+        <PrimaryButton type="submit" disabled={isLoading || channels.length === 0}>
+          {isLoading ? labels.loading : payButtonLabel}
+        </PrimaryButton>
+      </div>
     </form>
   );
 }
