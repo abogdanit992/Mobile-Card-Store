@@ -56,6 +56,7 @@ export default async function PaymentReturnPage({ searchParams }: ReturnPageProp
     if (synced === "paid") {
       redirect(`/cards?orderId=${orderId}`);
     }
+    redirect(`/payment/scan?orderId=${orderId}`);
   }
 
   // PayPal (personal / business / legacy): capture on return

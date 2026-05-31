@@ -52,4 +52,6 @@ export type CreatePaymentResult = {
   providerPaymentId?: string;
   /** Gateway merchant order id (merOrderTid) for async lookup. */
   merchantOrderId?: string;
+  /** External gateway H5 URL (Alipay / WeChat); stored for QR on desktop. */
+  paymentPageUrl?: string;
 };

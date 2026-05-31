@@ -14,6 +14,12 @@ function merOrderTidFromRaw(raw: unknown): string | null {
   return typeof v === "string" && v.trim() ? v.trim() : null;
 }
 
+function payUrlFromRaw(raw: unknown): string | null {
+  if (!raw || typeof raw !== "object") return null;
+  const v = (raw as Record<string, unknown>).payUrl;
+  return typeof v === "string" && v.trim() ? v.trim() : null;
+}
+
 export function isItxtProvider(provider: string): provider is "wechat" | "alipay" {
   return ITXT_PROVIDERS.has(provider as Provider);
 }
@@ -51,6 +57,7 @@ export async function syncItxtPaymentIfPending(
         merOrderTid,
         tid: result.tid,
         payOrderStatus: result.payOrderStatus,
+        ...(result.payUrl?.trim() ? { payUrl: result.payUrl.trim() } : {}),
       } as never,
       provider_payment_id: result.tid,
       updated_at: new Date().toISOString(),
@@ -71,4 +78,46 @@ export async function syncItxtPaymentIfPending(
   }
 
   return "pending";
+}
+
+/** Load or refresh gateway payUrl for the scan payment page. */
+export async function resolveItxtPayUrl(
+  admin: AdminClient,
+  orderId: string,
+): Promise<string | null> {
+  const { data: payment } = await admin
+    .from("payments")
+    .select("provider,status,raw")
+    .eq("order_id", orderId)
+    .maybeSingle();
+
+  if (!payment || !isItxtProvider(payment.provider)) return null;
+
+  const existing = payUrlFromRaw(payment.raw);
+  if (existing) return existing;
+
+  const merOrderTid = merOrderTidFromRaw(payment.raw);
+  if (!merOrderTid) return null;
+
+  const config = await getEnabledChannelConfig(admin, payment.provider);
+  if (!config) return null;
+
+  const result = await queryItxtPayment(config, merOrderTid);
+  const payUrl = result?.payUrl?.trim();
+  if (!payUrl) return null;
+
+  await admin
+    .from("payments")
+    .update({
+      raw: {
+        ...(typeof payment.raw === "object" && payment.raw ? payment.raw : {}),
+        merOrderTid,
+        payUrl,
+        ...(result?.tid ? { tid: result.tid } : {}),
+      } as never,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("order_id", orderId);
+
+  return payUrl;
 }

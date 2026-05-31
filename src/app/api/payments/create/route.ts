@@ -175,13 +175,36 @@ export async function POST(request: Request) {
       .from("payments")
       .update({
         provider_payment_id: result.providerPaymentId ?? null,
-        raw: result.merchantOrderId
-          ? ({ merOrderTid: result.merchantOrderId } as never)
-          : null,
+        raw:
+          result.merchantOrderId || result.paymentPageUrl
+            ? ({
+                ...(result.merchantOrderId
+                  ? { merOrderTid: result.merchantOrderId }
+                  : {}),
+                ...(result.providerPaymentId
+                  ? { tid: result.providerPaymentId }
+                  : {}),
+                ...(result.paymentPageUrl
+                  ? { payUrl: result.paymentPageUrl }
+                  : {}),
+              } as never)
+            : null,
       })
       .eq("id", payment.id);
 
-    return NextResponse.json({ ok: true, redirectUrl: result.redirectUrl });
+    let redirectUrl = result.redirectUrl;
+    if (
+      (provider === "wechat" || provider === "alipay") &&
+      result.paymentPageUrl
+    ) {
+      const ua = h.get("user-agent") ?? "";
+      const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
+      redirectUrl = isMobile
+        ? result.paymentPageUrl
+        : `${origin}/payment/scan?orderId=${order.id}`;
+    }
+
+    return NextResponse.json({ ok: true, redirectUrl });
   } catch (err) {
     await admin.from("orders").update({ status: "cancelled" }).eq("id", order.id);
     await admin.from("payments").update({ status: "failed" }).eq("id", payment.id);

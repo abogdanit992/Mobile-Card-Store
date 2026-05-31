@@ -60,6 +60,9 @@
 
 Checkout 选微信/支付宝 → 跳转 `payUrl` → JSON 回调验签发卡 → `/payment/return` 查单兜底。
 
+**电脑端**：跳转到站内 `/payment/scan?orderId=…`，展示 **支付二维码**（手机扫码付款）。  
+**手机端**：仍直接跳转支付方 H5 页（打开支付宝/微信 APP）。
+
 ## 金额
 
 API 的 `money` 为 **人民币元**。Storefront 若为 USD 标价，请填 `exchange_rate` 或改商品价为 CNY。

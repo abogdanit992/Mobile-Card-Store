@@ -123,6 +123,17 @@ export type Dict = {
   usdtExpiredHint: string;
   usdtImportant: string;
   usdtImportantHint: string;
+  // WeChat / Alipay scan pay (desktop QR)
+  scanPayTitle: string;
+  scanPaySubtitle: string;
+  scanPayQrHint: string;
+  scanPayAmount: string;
+  scanPayOpenApp: string;
+  scanPayWaiting: string;
+  scanPayWaitingHint: string;
+  scanPayReturnLink: string;
+  scanPayWechat: string;
+  scanPayAlipay: string;
 };
 
 const en: Dict = {
@@ -241,6 +252,17 @@ const en: Dict = {
   usdtImportant: "Important",
   usdtImportantHint:
     "Use TRC20 network only. Tap the amount above to copy — paste it as-is in your wallet. Wrong network, wrong amount, or edited decimals may fail auto delivery. Contact support with your tx hash if needed.",
+  scanPayTitle: "Scan to pay",
+  scanPaySubtitle: "WeChat / Alipay",
+  scanPayQrHint:
+    "Scan with WeChat or Alipay on your phone. On desktop, use the QR code; on mobile, tap the button below.",
+  scanPayAmount: "Amount (CNY)",
+  scanPayOpenApp: "Open payment page",
+  scanPayWaiting: "Waiting for payment…",
+  scanPayWaitingHint: "Your card is delivered automatically after payment is confirmed.",
+  scanPayReturnLink: "Already paid? Check order status",
+  scanPayWechat: "WeChat Pay",
+  scanPayAlipay: "Alipay",
 };
 
 const zh: Dict = {
@@ -358,6 +380,16 @@ const zh: Dict = {
   usdtImportant: "注意事项",
   usdtImportantHint:
     "务必选择 TRC20 网络。建议点击上方金额一键复制，原样粘贴到钱包，勿改小数位。网络或金额错误将无法自动发卡，请联系客服并提供交易哈希。",
+  scanPayTitle: "扫码支付",
+  scanPaySubtitle: "微信 / 支付宝",
+  scanPayQrHint: "请使用手机微信或支付宝扫描下方二维码完成付款。",
+  scanPayAmount: "应付金额（人民币）",
+  scanPayOpenApp: "打开支付页面",
+  scanPayWaiting: "等待支付确认…",
+  scanPayWaitingHint: "支付成功后将自动发卡，请勿关闭此页。",
+  scanPayReturnLink: "已支付？查看订单状态",
+  scanPayWechat: "微信支付",
+  scanPayAlipay: "支付宝",
 };
 
 const dictionaries: Record<Locale, Dict> = { en, zh };

@@ -1,4 +1,5 @@
 import { createHash } from "crypto";
+import { requireCnyAmount } from "./exchange-rate";
 import type {
   ChannelConfig,
   CreatePaymentParams,
@@ -69,14 +70,6 @@ export function verifyItxtSign(
 function apiBase(config: ChannelConfig): string {
   return (config.api_base_url?.trim() || DEFAULT_API_BASE).replace(/\/$/, "");
 }
-
-import {
-  convertUsdToCny,
-  formatCnyPrice,
-  isCnyCheckoutProvider,
-  parseExchangeRate,
-  requireCnyAmount,
-} from "./exchange-rate";
 
 async function postForm<T>(
   url: string,
@@ -149,6 +142,7 @@ export async function createItxtPayment(
     redirectUrl: payUrl,
     providerPaymentId: json.result.tid,
     merchantOrderId: merOrderTid,
+    paymentPageUrl: payUrl,
   };
 }
 
