@@ -20,11 +20,31 @@ export function resolveUsdtContract(raw?: string | null): string {
   return USDT_TRC20_CONTRACT;
 }
 
-/** Convert a USDT float amount to integer micro-units (6 decimals) for exact matching. */
+/** Convert USDT amount to micro-units (6 dp) without float rounding errors. */
 export function usdtToMicro(amount: number | string): string {
-  const n = Number(amount);
-  if (!Number.isFinite(n)) return "0";
-  return String(Math.round(n * 1_000_000));
+  const s = String(amount).trim();
+  if (!s || s === "null" || s === "undefined") return "0";
+  const negative = s.startsWith("-");
+  const normalized = negative ? s.slice(1) : s;
+  const [whole = "0", fracRaw = ""] = normalized.split(".");
+  const frac = fracRaw.padEnd(6, "0").slice(0, 6);
+  const micro = BigInt(whole || "0") * BigInt(1_000_000) + BigInt(frac);
+  const out = micro.toString();
+  return negative ? `-${out}` : out;
+}
+
+/** Normalize on-chain token `value` string to 6-decimal micro-units. */
+export function rawTokenToMicro(raw: string, decimals: number): string {
+  const digits = raw.replace(/\D/g, "") || "0";
+  if (decimals === 6) return digits.replace(/^0+/, "") || "0";
+  if (decimals < 6) {
+    const padded = digits.padStart(decimals + 1, "0");
+    const whole = padded.slice(0, padded.length - decimals) || "0";
+    const frac = padded.slice(padded.length - decimals).padEnd(6, "0").slice(0, 6);
+    return usdtToMicro(`${whole}.${frac}`);
+  }
+  const trimmed = digits.slice(0, digits.length - (decimals - 6));
+  return trimmed.replace(/^0+/, "") || "0";
 }
 
 export function microToUsdtAmount(micro: string | number): number {

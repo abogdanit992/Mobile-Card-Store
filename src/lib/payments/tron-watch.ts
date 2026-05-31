@@ -3,12 +3,15 @@ import {
   isUsdtTransfer,
   isValidTronBase58Address,
   microToUsdtAmount,
+  rawTokenToMicro,
   resolveUsdtContract,
   usdtToMicro,
 } from "./tron-utils";
 import { fulfillPaidOrder } from "./service";
 
 const TRONGRID_BASE = "https://api.trongrid.io";
+/** Keep matching open 7 days after order creation (late transfers). */
+const MATCH_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 export type Trc20Transfer = {
   txId: string;
@@ -78,12 +81,13 @@ export async function fetchIncomingUsdtTransfers(
 
     const decimals = item.token_info?.decimals ?? 6;
     const raw = item.value ?? "0";
-    const amount = microToUsdtAmount(Number(raw) / 10 ** decimals);
+    const amountMicro = rawTokenToMicro(raw, decimals);
+    const amount = microToUsdtAmount(amountMicro);
     if (!item.transaction_id || amount <= 0) continue;
 
     out.push({
       txId: item.transaction_id,
-      amountMicro: usdtToMicro(amount),
+      amountMicro,
       amount,
       to,
       blockTimestamp: item.block_timestamp ?? 0,
@@ -126,11 +130,10 @@ export async function processDirectUsdtPayments(): Promise<{
   expired: number;
   scanned?: number;
   pending?: number;
+  matchable?: number;
   error?: string;
 }> {
   const admin = createSupabaseAdminClient();
-
-  const expired = await expireStaleOrders();
 
   const { data: channel } = await admin
     .from("payment_channels")
@@ -139,18 +142,18 @@ export async function processDirectUsdtPayments(): Promise<{
     .maybeSingle();
 
   if (!channel?.enabled) {
-    return { fulfilled: 0, expired, error: "direct_usdt disabled" };
+    return { fulfilled: 0, expired: 0, error: "direct_usdt disabled" };
   }
 
   const config = (channel.config ?? {}) as Record<string, string>;
   const walletAddress = config.wallet_address?.trim() ?? "";
   if (!walletAddress) {
-    return { fulfilled: 0, expired, error: "wallet_address missing" };
+    return { fulfilled: 0, expired: 0, error: "wallet_address missing" };
   }
   if (!isValidTronBase58Address(walletAddress)) {
     return {
       fulfilled: 0,
-      expired,
+      expired: 0,
       error: `wallet_address invalid (must be T… base58): ${walletAddress}`,
     };
   }
@@ -168,7 +171,7 @@ export async function processDirectUsdtPayments(): Promise<{
     .map((p) => p.order_id)
     .filter((id): id is string => Boolean(id));
   if (!orderIds.length) {
-    return { fulfilled: 0, expired, pending: 0 };
+    return { fulfilled: 0, expired: 0, pending: 0 };
   }
 
   const { data: pendingOrders } = await admin
@@ -178,17 +181,23 @@ export async function processDirectUsdtPayments(): Promise<{
     .not("pay_amount_exact", "is", null);
 
   if (!pendingOrders?.length) {
-    return { fulfilled: 0, expired, pending: 0 };
+    return { fulfilled: 0, expired: 0, pending: 0 };
   }
 
   const now = Date.now();
   const matchableOrders = pendingOrders.filter((o) => {
-    if (!o.expires_at) return true;
-    return new Date(o.expires_at).getTime() + 2 * 60 * 60_000 > now;
+    const age = now - new Date(o.created_at).getTime();
+    return age >= 0 && age <= MATCH_WINDOW_MS;
   });
 
   if (!matchableOrders.length) {
-    return { fulfilled: 0, expired, pending: pendingOrders.length };
+    return {
+      fulfilled: 0,
+      expired: 0,
+      pending: pendingOrders.length,
+      matchable: 0,
+      scanned: 0,
+    };
   }
 
   const minTs = Math.min(
@@ -206,8 +215,9 @@ export async function processDirectUsdtPayments(): Promise<{
   } catch (err) {
     return {
       fulfilled: 0,
-      expired,
+      expired: 0,
       pending: pendingOrders.length,
+      matchable: matchableOrders.length,
       error: err instanceof Error ? err.message : "TronGrid fetch failed",
     };
   }
@@ -227,7 +237,7 @@ export async function processDirectUsdtPayments(): Promise<{
   const amountToOrder = new Map<string, string>();
   for (const order of matchableOrders) {
     if (order.pay_amount_exact != null) {
-      amountToOrder.set(usdtToMicro(order.pay_amount_exact), order.id);
+      amountToOrder.set(usdtToMicro(String(order.pay_amount_exact)), order.id);
     }
   }
 
@@ -265,10 +275,13 @@ export async function processDirectUsdtPayments(): Promise<{
     }
   }
 
+  const expired = await expireStaleOrders();
+
   return {
     fulfilled,
     expired,
     scanned: transfers.length,
     pending: pendingOrders.length,
+    matchable: matchableOrders.length,
   };
 }
