@@ -17,7 +17,7 @@ export default async function AdminCategoriesPage() {
   const supabase = await createSupabaseServerClient();
   const { data: categories, error } = await supabase
     .from("categories")
-    .select("id,slug,name_en,name_zh,icon_url,sort_order,active")
+    .select("id,slug,name_en,name_zh,icon_url,sort_order,active,stack_monthly_codes")
     .order("sort_order", { ascending: true });
 
   return (
@@ -50,6 +50,13 @@ export default async function AdminCategoriesPage() {
           placeholder={t.sortOrder}
           className={inputClass}
         />
+        <label className="flex items-start gap-2 text-xs text-neutral-700">
+          <input type="checkbox" name="stack_monthly_codes" className="mt-0.5 h-4 w-4" />
+          <span>
+            <span className="font-semibold">{t.stackMonthlyCodes}</span>
+            <span className="mt-1 block text-neutral-500">{t.stackMonthlyCodesHint}</span>
+          </span>
+        </label>
       </ActionForm>
 
       {error ? (
@@ -108,6 +115,20 @@ export default async function AdminCategoriesPage() {
                 defaultValue={c.sort_order}
                 className={inputClass}
               />
+              <label className="flex items-start gap-2 text-xs text-neutral-700">
+                <input
+                  type="checkbox"
+                  name="stack_monthly_codes"
+                  defaultChecked={c.stack_monthly_codes}
+                  className="mt-0.5 h-4 w-4"
+                />
+                <span>
+                  <span className="font-semibold">{t.stackMonthlyCodes}</span>
+                  <span className="mt-1 block text-neutral-500">
+                    {t.stackMonthlyCodesHint}
+                  </span>
+                </span>
+              </label>
             </ActionForm>
             <div className="mt-2 flex gap-2">
               <ActionForm

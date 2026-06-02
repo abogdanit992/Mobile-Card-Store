@@ -108,6 +108,8 @@ export type AdminDict = {
   addCategory: string;
   newCategory: string;
   slugOptional: string;
+  stackMonthlyCodes: string;
+  stackMonthlyCodesHint: string;
   iconUrl: string;
   confirmDeleteCategory: string;
 
@@ -344,6 +346,9 @@ const en: AdminDict = {
   addCategory: "Add category",
   newCategory: "New category",
   slugOptional: "slug (optional)",
+  stackMonthlyCodes: "Stack monthly codes (季/年发多张月卡)",
+  stackMonthlyCodesHint:
+    "ON: quarterly = 3 monthly codes, annual = 12, from monthly SKU inventory. OFF: one code from each product’s own inventory.",
   iconUrl: "Icon URL",
   confirmDeleteCategory: "Delete this category? This cannot be undone.",
 
@@ -575,6 +580,9 @@ const zh: AdminDict = {
   addCategory: "添加分类",
   newCategory: "新建分类",
   slugOptional: "slug（可选）",
+  stackMonthlyCodes: "月卡叠加发放（季/年发多张月卡）",
+  stackMonthlyCodesHint:
+    "开启：季卡发 3 张月卡、年卡发 12 张，从「月卡」商品库存扣。关闭：按各商品自己的库存各发 1 张。",
   iconUrl: "图标 URL",
   confirmDeleteCategory: "确定删除此分类？此操作不可撤销。",
 

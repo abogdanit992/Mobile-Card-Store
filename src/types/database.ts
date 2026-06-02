@@ -150,6 +150,7 @@ export type Database = {
           icon_url: string | null;
           sort_order: number;
           active: boolean;
+          stack_monthly_codes: boolean;
           created_at: string;
         };
         Insert: {
@@ -160,6 +161,7 @@ export type Database = {
           icon_url?: string | null;
           sort_order?: number;
           active?: boolean;
+          stack_monthly_codes?: boolean;
           created_at?: string;
         };
         Update: {
@@ -170,6 +172,7 @@ export type Database = {
           icon_url?: string | null;
           sort_order?: number;
           active?: boolean;
+          stack_monthly_codes?: boolean;
           created_at?: string;
         };
         Relationships: [];

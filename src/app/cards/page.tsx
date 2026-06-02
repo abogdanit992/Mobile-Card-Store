@@ -1,12 +1,12 @@
 import { formatPrice } from "@/lib/format";
 import { MobileShell } from "@/components/mobile-shell";
-import { CardCodeDisplay } from "@/components/card-code-display";
+import { CardCodesList } from "@/components/card-codes-list";
 import { PrimaryButton } from "@/components/primary-button";
 import { StoreHeader } from "@/components/store-header";
 import { getTranslations } from "@/lib/i18n/server";
 import {
   contactMatchesOrder,
-  fetchCardForOrder,
+  fetchOrderCardDelivery,
   fetchOrderForContactVerification,
 } from "@/lib/orders/server-access";
 
@@ -17,6 +17,18 @@ type CardsPageProps = {
     phone?: string;
   }>;
 };
+
+function stackHintForCardType(
+  cardType: string | null,
+  t: {
+    cardStackHintQuarterly: string;
+    cardStackHintAnnual: string;
+  },
+): string | null {
+  if (cardType === "quarterly") return t.cardStackHintQuarterly;
+  if (cardType === "annual") return t.cardStackHintAnnual;
+  return null;
+}
 
 export default async function CardsPage({ searchParams }: CardsPageProps) {
   const { orderId, email, phone } = await searchParams;
@@ -41,7 +53,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
 
   let verifyError: string | null = null;
   let order: Awaited<ReturnType<typeof fetchOrderForContactVerification>> = null;
-  let card: Awaited<ReturnType<typeof fetchCardForOrder>> = null;
+  let delivery: Awaited<ReturnType<typeof fetchOrderCardDelivery>> = null;
 
   if (hasContact) {
     order = await fetchOrderForContactVerification(orderId);
@@ -54,9 +66,16 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
     } else if (order.status !== "paid") {
       verifyError = t.cardOrderNotPaid;
     } else {
-      card = await fetchCardForOrder(orderId);
+      delivery = await fetchOrderCardDelivery(orderId);
     }
   }
+
+  const codes = delivery?.codes ?? [];
+  const showStackHint =
+    codes.length > 1 && delivery?.stackMonthlyCodes && delivery.cardType;
+  const stackHint = showStackHint
+    ? stackHintForCardType(delivery!.cardType, t)
+    : null;
 
   return (
     <MobileShell>
@@ -76,7 +95,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
                   type="email"
                   inputMode="email"
                   autoComplete="email"
-                  className="mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-black/30 px-3 text-sm text-white"
+                  className="mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-black/30 px-3 text-base text-white"
                 />
               </div>
               <div>
@@ -85,7 +104,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
                   name="phone"
                   type="tel"
                   autoComplete="tel"
-                  className="mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-black/30 px-3 text-sm text-white"
+                  className="mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-black/30 px-3 text-base text-white"
                 />
               </div>
               <p className="text-[10px] text-[var(--muted)]">{t.lookupNeedOne}</p>
@@ -101,19 +120,31 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
           <section className="rounded-xl border border-red-900/50 bg-red-950/40 p-4 text-sm text-red-300">
             {verifyError}
           </section>
-        ) : card ? (
+        ) : codes.length > 0 ? (
           <section className="rounded-xl border border-[var(--accent)]/50 bg-[var(--card)] p-5 glow-pink">
             <p className="text-center text-[10px] font-black uppercase tracking-[0.2em] text-[var(--accent-soft)]">
-              {t.yourVipCode}
+              {codes.length > 1 ? t.yourVipCodes : t.yourVipCode}
             </p>
-            <CardCodeDisplay
-              code={card.code}
+
+            {stackHint ? (
+              <div className="mt-4 rounded-lg border border-amber-500/40 bg-amber-950/30 p-3">
+                <p className="text-xs font-bold text-amber-200">{t.cardStackHintTitle}</p>
+                <p className="mt-2 text-xs leading-relaxed text-amber-100/90">
+                  {stackHint}
+                </p>
+              </div>
+            ) : null}
+
+            <CardCodesList
+              codes={codes}
               labels={{
                 copyCode: t.copyCode,
                 copied: t.copied,
                 tapToCopy: t.tapToCopy,
+                codeNumber: t.cardCodeNumber,
               }}
             />
+
             {order ? (
               <p className="mt-3 text-center text-xs text-[var(--muted)]">
                 {t.order} {order.id.slice(0, 8)}… · {formatPrice(order.amount)} ·{" "}

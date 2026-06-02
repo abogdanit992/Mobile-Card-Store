@@ -22,6 +22,7 @@ export async function createCategoryAction(
   const iconUrl = String(formData.get("icon_url") ?? "").trim();
   const slugRaw = String(formData.get("slug") ?? "").trim();
   const sortOrder = Number(formData.get("sort_order") ?? 0);
+  const stackMonthlyCodes = formData.get("stack_monthly_codes") === "on";
 
   if (!nameEn) return { ok: false, message: "English name is required." };
 
@@ -36,6 +37,7 @@ export async function createCategoryAction(
     icon_url: iconUrl || null,
     sort_order: Number.isFinite(sortOrder) ? sortOrder : 0,
     active: true,
+    stack_monthly_codes: stackMonthlyCodes,
   };
 
   const { error } = await supabase.from("categories").insert([payload]);
@@ -57,6 +59,7 @@ export async function updateCategoryAction(
   const nameZh = String(formData.get("name_zh") ?? "").trim();
   const iconUrl = String(formData.get("icon_url") ?? "").trim();
   const sortOrder = Number(formData.get("sort_order") ?? 0);
+  const stackMonthlyCodes = formData.get("stack_monthly_codes") === "on";
 
   if (!nameEn) return { ok: false, message: "English name is required." };
 
@@ -68,6 +71,7 @@ export async function updateCategoryAction(
     name_zh: nameZh || null,
     icon_url: iconUrl || null,
     sort_order: Number.isFinite(sortOrder) ? sortOrder : 0,
+    stack_monthly_codes: stackMonthlyCodes,
   };
 
   const { error } = await supabase.from("categories").update(update).eq("id", id);

@@ -95,6 +95,11 @@ export type Dict = {
   keepSafe: string;
   finishPaymentFirst: string;
   yourVipCode: string;
+  yourVipCodes: string;
+  cardCodeNumber: string;
+  cardStackHintTitle: string;
+  cardStackHintQuarterly: string;
+  cardStackHintAnnual: string;
   order: string;
   cardNotAllocated: string;
   saveScreenshot: string;
@@ -223,6 +228,13 @@ const en: Dict = {
   keepSafe: "Keep this code private",
   finishPaymentFirst: "Please complete payment first",
   yourVipCode: "Your VIP Code",
+  yourVipCodes: "Your VIP Codes",
+  cardCodeNumber: "Code {n} of {total}",
+  cardStackHintTitle: "How to use these codes",
+  cardStackHintQuarterly:
+    "You received 3 monthly codes. In the app, open activation and enter each code one at a time (3 times). Each activation adds about 1 month — all three together ≈ 3 months of access.",
+  cardStackHintAnnual:
+    "You received 12 monthly codes. In the app, open activation and enter each code one at a time (12 times). Each activation adds about 1 month — all twelve together ≈ 12 months of access.",
   order: "Order",
   cardNotAllocated: "No card allocated to this order yet",
   saveScreenshot: "Keep private · activate in the app",
@@ -352,6 +364,13 @@ const zh: Dict = {
   keepSafe: "请妥善保管，勿外泄",
   finishPaymentFirst: "请先完成支付流程",
   yourVipCode: "您的卡密",
+  yourVipCodes: "您的卡密（共多张）",
+  cardCodeNumber: "第 {n} 张 / 共 {total} 张",
+  cardStackHintTitle: "如何使用多张月卡",
+  cardStackHintQuarterly:
+    "您收到 3 张月卡卡密。请在 App 的激活入口依次输入，每张激活一次（共 3 次）。每激活 1 张约顺延 1 个月，3 张全部激活后合计约 3 个月会员时长。",
+  cardStackHintAnnual:
+    "您收到 12 张月卡卡密。请在 App 的激活入口依次输入，每张激活一次（共 12 次）。每激活 1 张约顺延 1 个月，12 张全部激活后合计约 12 个月会员时长。",
   order: "订单",
   cardNotAllocated: "该订单尚未分配卡密",
   saveScreenshot: "请勿外泄 · 复制后到 App 内激活",
