@@ -220,6 +220,9 @@ export type AdminDict = {
   statusUsed: string;
   statusAvailable: string;
   noCards: string;
+  cardsRecentListHint: string;
+  cardsSiteTotalTitle: string;
+  cardsByPlatformTitle: string;
 
   // users
   usersTitle: string;
@@ -454,6 +457,9 @@ const en: AdminDict = {
   statusUsed: "Used",
   statusAvailable: "Available",
   noCards: "No card inventory found.",
+  cardsRecentListHint: "Below shows the latest 100 cards only.",
+  cardsSiteTotalTitle: "Site-wide total (all platforms)",
+  cardsByPlatformTitle: "By platform",
 
   usersTitle: "User Management",
   joined: "Joined",
@@ -685,6 +691,9 @@ const zh: AdminDict = {
   statusUsed: "已使用",
   statusAvailable: "可用",
   noCards: "暂无卡密库存。",
+  cardsRecentListHint: "下方仅展示最近 100 条卡密。",
+  cardsSiteTotalTitle: "全站合计（所有平台）",
+  cardsByPlatformTitle: "各平台库存",
 
   usersTitle: "用户管理",
   joined: "注册时间",

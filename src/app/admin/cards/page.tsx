@@ -18,6 +18,11 @@ import {
   adminSelectClass as selectClass,
   adminTextareaMonoClass,
 } from "@/lib/admin/form-styles";
+import {
+  fetchCategoryCardInventories,
+  fetchSiteWideCardInventory,
+  groupProductIdsByCategory,
+} from "@/lib/admin/card-inventory-stats";
 
 type CategoryRow = { id: string; name_en: string; name_zh: string | null };
 
@@ -64,28 +69,42 @@ export default async function AdminCardsPage() {
   const backHref = await adminHref("/admin");
   const supabase = await createSupabaseServerClient();
 
-  const [{ data: products }, { data: categories }, { data: cards, error }] =
-    await Promise.all([
-      supabase
-        .from("products")
-        .select("id,title,name_en,name_zh,active")
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("categories")
-        .select("id,name_en,name_zh")
-        .order("sort_order", { ascending: true }),
-      supabase
-        .from("cards")
-        .select("id,product_id,code,used,created_at")
-        .order("created_at", { ascending: false })
-        .limit(100),
-    ]);
+  const CARD_LIST_PREVIEW = 100;
+
+  const [
+    { data: products, error: productsError },
+    { data: categories, error: categoriesError },
+    { data: cards, error: listError },
+  ] = await Promise.all([
+    supabase
+      .from("products")
+      .select("id,title,name_en,name_zh,active,category_id")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("categories")
+      .select("id,name_en,name_zh")
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("cards")
+      .select("id,product_id,code,used,created_at")
+      .order("created_at", { ascending: false })
+      .limit(CARD_LIST_PREVIEW),
+  ]);
 
   const cats = categories ?? [];
+  const productIdsByCategory = groupProductIdsByCategory(products ?? []);
+  const categoryIds = cats.map((c) => c.id);
 
-  const total = cards?.length ?? 0;
-  const available = cards?.filter((item) => !item.used).length ?? 0;
-  const used = total - available;
+  const [siteWide, platformStats] = await Promise.all([
+    fetchSiteWideCardInventory(supabase),
+    fetchCategoryCardInventories(supabase, categoryIds, productIdsByCategory),
+  ]);
+
+  const error = productsError ?? categoriesError ?? listError;
+  const totalCount = siteWide.total;
+  const availableCount = siteWide.available;
+  const usedCount = siteWide.used;
+  const platformStatsById = new Map(platformStats.map((row) => [row.categoryId, row]));
   const productName = new Map(
     (products ?? []).map((p) => [
       p.id,
@@ -102,18 +121,58 @@ export default async function AdminCardsPage() {
         title={t.cardsTitle}
       />
 
-      <section className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
-        <div className="rounded-xl border border-neutral-200 bg-white p-2">
-          <p className="text-neutral-500">{t.statTotal}</p>
-          <p className="mt-1 text-base font-semibold text-neutral-900">{total}</p>
+      <section className="mt-4 rounded-2xl border border-neutral-200 bg-white p-4">
+        <h2 className="text-sm font-semibold text-neutral-900">{t.cardsSiteTotalTitle}</h2>
+        <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
+          <div className="rounded-xl border border-neutral-100 bg-neutral-50 p-2">
+            <p className="text-neutral-500">{t.statTotal}</p>
+            <p className="mt-1 text-base font-semibold text-neutral-900">{totalCount}</p>
+          </div>
+          <div className="rounded-xl border border-neutral-100 bg-neutral-50 p-2">
+            <p className="text-neutral-500">{t.statAvailable}</p>
+            <p className="mt-1 text-base font-semibold text-emerald-700">{availableCount}</p>
+          </div>
+          <div className="rounded-xl border border-neutral-100 bg-neutral-50 p-2">
+            <p className="text-neutral-500">{t.statUsed}</p>
+            <p className="mt-1 text-base font-semibold text-amber-700">{usedCount}</p>
+          </div>
         </div>
-        <div className="rounded-xl border border-neutral-200 bg-white p-2">
-          <p className="text-neutral-500">{t.statAvailable}</p>
-          <p className="mt-1 text-base font-semibold text-emerald-700">{available}</p>
-        </div>
-        <div className="rounded-xl border border-neutral-200 bg-white p-2">
-          <p className="text-neutral-500">{t.statUsed}</p>
-          <p className="mt-1 text-base font-semibold text-amber-700">{used}</p>
+      </section>
+
+      <section className="mt-3 rounded-2xl border border-neutral-200 bg-white p-4">
+        <h2 className="text-sm font-semibold text-neutral-900">{t.cardsByPlatformTitle}</h2>
+        <div className="mt-3 space-y-2">
+          {cats.map((cat) => {
+            const row = platformStatsById.get(cat.id) ?? {
+              total: 0,
+              available: 0,
+              used: 0,
+            };
+            return (
+              <div
+                key={cat.id}
+                className="rounded-xl border border-neutral-100 bg-neutral-50 p-3"
+              >
+                <p className="text-xs font-semibold text-neutral-900">
+                  {adminCategoryLabel(locale, cat.name_en, cat.name_zh)}
+                </p>
+                <div className="mt-2 grid grid-cols-3 gap-2 text-center text-[11px]">
+                  <div>
+                    <p className="text-neutral-500">{t.statTotal}</p>
+                    <p className="mt-0.5 font-semibold text-neutral-900">{row.total}</p>
+                  </div>
+                  <div>
+                    <p className="text-neutral-500">{t.statAvailable}</p>
+                    <p className="mt-0.5 font-semibold text-emerald-700">{row.available}</p>
+                  </div>
+                  <div>
+                    <p className="text-neutral-500">{t.statUsed}</p>
+                    <p className="mt-0.5 font-semibold text-amber-700">{row.used}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 
@@ -201,6 +260,9 @@ export default async function AdminCardsPage() {
       </section>
 
       <section className="mt-4 grid gap-3">
+        {totalCount > CARD_LIST_PREVIEW ? (
+          <p className="text-xs text-neutral-500">{t.cardsRecentListHint}</p>
+        ) : null}
         {error ? (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {t.loadFailed}: {error.message}
